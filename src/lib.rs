@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 use std::fs::File;
-use std::io;
 use std::io::prelude::*;
 
 /// general chip 8 struct
@@ -36,16 +35,38 @@ impl Chip8 {
         }
     }
     
-    pub fn load_rom(&self, path: PathBuf) {
-       let start_address = 0x200; 
+    pub fn load_rom(&mut self, path: PathBuf) {
+        // memory addres before this are reserved
+        let start_address = 0x200; 
 
-       let mut file = File::open("roms/Chip8-Picture.ch8").unwrap();
+        // open rom file
+        let file = File::open("roms/Chip8-Picture.ch8").expect("Error opening rom file");
 
-       let mut buf: Vec<u8> = Vec::new();
+        // buffer to store bytes in
+        let mut buf: Vec<u8> = Vec::new();
 
-       for byte in file.bytes() {
-           buf.push(byte.unwrap());
-       }
-       println!("{:x?}", buf);
+        // read the bytes from file
+        for byte in file.bytes() {
+            let byte = match byte {
+                Ok(byte) => byte,
+                Err(error) => panic!("Provided rom is not a valid binary. {:?}", error),
+            };
+            buf.push(byte);
+        }
+        // println!("{:x?}", buf);
+
+        // load the buffer into the chip 8 memory
+        for i in 0..buf.len() - 1 {
+            self.memory[start_address + i] = buf[i];
+        }
+    }
+
+    pub fn dump_rom(&self, pointer: usize, byte_number: usize) -> Vec<u8> {
+        let mut rom: Vec<u8> = Vec::new();
+        for i in pointer..self.memory.len() {
+            rom.push(self.memory[i]);
+        }
+
+        return rom;
     }
 }
