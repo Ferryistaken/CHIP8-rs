@@ -1,6 +1,6 @@
 # CHIP8-rs - A chip 8 emulator written in rust
 
-![Rust]()
+![Rust](https://github.com/Ferryistaken/CHIP8-rs/workflows/Rust/badge.svg)
 ![Languages](https://img.shields.io/github/languages/count/Ferryistaken/CHIP8-rs?style=flat-square)
 ![Size](https://img.shields.io/github/repo-size/Ferryistaken/CHIP8-rs?style=flat-square)
 ![Issues](https://img.shields.io/github/issues/Ferryistaken/CHIP8-rs?style=flat-square)
