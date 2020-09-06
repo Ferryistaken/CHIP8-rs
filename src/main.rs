@@ -1,18 +1,9 @@
-struct Chip8 {
-    register: [u8; 16],
-    memory: [u8; 4096],
-    index: u16,
-    program_counter: u16,
-    stack: [u16; 16],
-    stack_pointer: u8,
-    delay_timer: u8,
-    sound_timer: u8,
-    keypad: [u8; 16],
-    video: [[u32; 64] ; 32],
-    op_code: u16
-}
+use std::path::PathBuf;
+use chip8_rs::Chip8;
 
-
+mod lib;
 fn main() {
+    let chip8: Chip8 = Chip8::new();
 
+    chip8.load_rom(PathBuf::from("/home/ferry/Documents/projects/rust/chip8-rs/roms/Chip8-Picture.ch8"));
 }
