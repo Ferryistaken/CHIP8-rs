@@ -14,7 +14,7 @@ pub struct Chip8 {
     delay_timer: u8,
     sound_timer: u8,
     keypad: [u8; 16],
-    video: [[u32; 64]; 32],
+    pub video: [[u32; 64]; 32],
     op_code: u16,
 }
 
@@ -46,7 +46,7 @@ impl Chip8 {
             delay_timer: 0,
             sound_timer: 0,
             keypad: [0; 16],
-            video: [[0; 64]; 32],
+            video: [[15; 64]; 32],
             op_code: 0,
         }
     }
@@ -87,6 +87,7 @@ impl Chip8 {
         return rom;
     }
 
+    /// Load the fontset into memory
     fn load_fonts(mut self) {
         let fontset: [u8; 80] = [
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -114,8 +115,31 @@ impl Chip8 {
         }
     }
 
+    /// Generate a random byte(0, 255)
     pub fn rand_byte(self) -> u8 {
         let mut rng = rand::thread_rng();
         rng.gen_range(0, 255)
+    }
+
+    //
+    //
+    // From Now On I will define all `opcodes`, taken from here:
+    //
+    // https://austinmorlan.com/posts/chip8_emulator/
+    //
+    //
+
+    pub fn OP_00E0(&mut self) {
+        // set video buffer to zero
+        // memset doesn't work
+        // self.video.iter_mut().for_each(|m| *m = [0; 64])
+        self.video = [[0; 64]; 32];
+
+        // method to check the video
+        //for (i, row) in self.video.iter_mut().enumerate() {
+        //    for (y, col) in row.iter_mut().enumerate() {
+        //        println!("{}", col);
+        //    }
+        //}
     }
 }
