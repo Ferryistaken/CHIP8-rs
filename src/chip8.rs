@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::prelude::*;
+use rand::Rng;
 
 /// General chip 8 struct
 pub struct Chip8 {
@@ -111,5 +112,10 @@ impl Chip8 {
         for i in 0..fontset.len() - 1 {
             self.memory[fontset_start_address + i as usize] = fontset[i as usize];
         }
+    }
+
+    pub fn rand_byte(self) -> u8 {
+        let mut rng = rand::thread_rng();
+        rng.gen_range(0, 255)
     }
 }
