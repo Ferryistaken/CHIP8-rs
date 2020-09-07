@@ -129,6 +129,7 @@ impl Chip8 {
     //
     //
 
+    /// OPCODE 00E0 - Clear Screen
     pub fn OP_00E0(&mut self) {
         // set video buffer to zero
         // memset doesn't work
@@ -143,9 +144,15 @@ impl Chip8 {
         //}
     }
 
+    /// OPCODE 00EE - Return from subroutine
     fn OP_00EE(&mut self) {
         self.stack_pointer = self.stack_pointer - 1;
 
         self.program_counter = self.stack[self.stack_pointer as usize];
+    }
+
+    /// OPCODE 1NNN - Jump to location NNN(set program counter to nnn)
+    fn OP_1nnn(&self) {
+        let address: u16 = self.op_code & 0x0FFFu;
     }
 }
