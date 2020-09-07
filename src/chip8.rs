@@ -14,7 +14,7 @@ pub struct Chip8 {
     delay_timer: u8,
     sound_timer: u8,
     keypad: [u8; 16],
-    pub video: [[u32; 64]; 32],
+    video: [[u32; 64]; 32],
     op_code: u16,
 }
 
@@ -50,13 +50,13 @@ impl Chip8 {
             op_code: 0,
         }
     }
-    
+
     pub fn load_rom(&mut self, path: PathBuf) {
         // memory addres before this are reserved
         let start_address = 0x200; 
 
         // open rom file
-        let file = File::open("roms/Chip8-Picture.ch8").expect("Error opening rom file");
+        let file = File::open(path).expect("Error opening rom file");
 
         // buffer to store bytes in
         let mut buf: Vec<u8> = Vec::new();
@@ -87,8 +87,20 @@ impl Chip8 {
         return rom;
     }
 
+    pub fn dump_video(&mut self) -> Vec<&u32> {
+        let mut buf: Vec<&u32> = Vec::new();
+        for (_i, row) in self.video.iter_mut().enumerate() {
+            for (_y, col) in row.iter_mut().enumerate() {
+                println!("{}", col);
+                buf.push(col);
+            }
+        }
+        return buf;
+    }
+
     /// Load the fontset into memory
     fn load_fonts(mut self) {
+        // TODO: load fonts in the constructor
         let fontset: [u8; 80] = [
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -135,13 +147,6 @@ impl Chip8 {
         // memset doesn't work
         // self.video.iter_mut().for_each(|m| *m = [0; 64])
         self.video = [[0; 64]; 32];
-
-        // method to check the video buffer
-        //for (i, row) in self.video.iter_mut().enumerate() {
-        //    for (y, col) in row.iter_mut().enumerate() {
-        //        println!("{}", col);
-        //    }
-        //}
     }
 
     /// OPCODE 00EE - Return from subroutine
@@ -152,7 +157,25 @@ impl Chip8 {
     }
 
     /// OPCODE 1NNN - Jump to location NNN(set program counter to nnn)
-    fn OP_1nnn(&self) {
-        let address: u16 = self.op_code & 0x0FFFu;
+    fn OP_1nnn(&mut self) {
+        // using 0x0FFF I can take the NNN from the opcode while leaving the one
+        let address: u16 = self.op_code & 0x0FFF;
+
+        self.program_counter = address;
     }
+
+    /// OPCODE 2NNN - Call subroutine at location NNN
+    fn OP_2nnn(&mut self) {
+        let address: u16 = self.op_code & 0x0FFF;
+
+        self.stack[self.stack_pointer as usize] = self.program_counter;
+        self.stack_pointer = self.stack_pointer + 1;
+        self.program_counter = address;
+    }
+
+    /// OPCODE 3XKK - Skip next instruction if Vx = kk
+    // TODO: actually implment this
+    //fn OP_3xkk(&self) {
+    //    let Vx: u8 = 
+    //}
 }
