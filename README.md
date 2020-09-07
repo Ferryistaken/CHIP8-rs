@@ -8,7 +8,7 @@
 ![Commits this month](https://img.shields.io/github/commit-activity/m/Ferryistaken/CHIP8-rs?style=flat-square)
 
 <p align="center">
-  <img width="460" height="300" src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/chip8.png?raw=true">
+  <img width="460" height="300" src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/chip8.jpg?raw=true">
 </p>
 
 ## Description
