@@ -116,9 +116,9 @@ impl Chip8 {
     }
 
     /// Generate a random byte(0, 255)
-    pub fn rand_byte(self) -> u8 {
+    pub fn rand_byte(&self) -> u8 {
         let mut rng = rand::thread_rng();
-        rng.gen_range(0, 255)
+        return rng.gen_range(0, 255);
     }
 
     //
@@ -135,11 +135,17 @@ impl Chip8 {
         // self.video.iter_mut().for_each(|m| *m = [0; 64])
         self.video = [[0; 64]; 32];
 
-        // method to check the video
+        // method to check the video buffer
         //for (i, row) in self.video.iter_mut().enumerate() {
         //    for (y, col) in row.iter_mut().enumerate() {
         //        println!("{}", col);
         //    }
         //}
+    }
+
+    fn OP_00EE(&mut self) {
+        self.stack_pointer = self.stack_pointer - 1;
+
+        self.program_counter = self.stack[self.stack_pointer as usize];
     }
 }
