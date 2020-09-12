@@ -176,7 +176,7 @@ impl Chip8 {
         self.program_counter = address;
     }
 
-    // TODO: Make all of these `Vx` Variables `u8` instead of `u16`
+    // TODO: Make all of these `Vx` Variables `u8`(or maybe even usize) instead of `u16`
 
     /// OPCODE 3XKK - Skip next instruction if Vx = kk
     /// Since our PC has already been incremented by 2 in Cycle(), we can just increment by 2 again to skip the next instruction.
@@ -225,11 +225,24 @@ impl Chip8 {
         let Vx: u16 = (self.op_code & 0x0F00) >> 8;
         let byte: u16 = self.op_code & 0x00FF;
 
-        let byte = match u8::try_from(byte) {
+        let byte: u8 = match u8::try_from(byte) {
             Ok(number) => number,
             Err(error) => panic!("Could not turn u16 into u8 in OPCODE 6XKK. Error: {}", error),
         };
 
         self.registers[Vx as usize] = byte;
+    }
+
+    /// OPCODE 7XKK - Set Vx = Vx + kk.
+    fn OP_7xkk(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let byte: u16 = self.op_code & 0x00FF;
+
+        let byte: u8 = match u8::try_from(byte) {
+            Ok(number) => number,
+            Err(error) => panic!("Could not turn u16 into u8 in OPCODE 7XKK. Error: {}", error),
+        };
+
+        self.registers[Vx as usize] += byte;
     }
 }
