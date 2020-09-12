@@ -245,4 +245,12 @@ impl Chip8 {
 
         self.registers[Vx as usize] += byte;
     }
+
+    /// OPCODE 8XY0 - Set Vx = Vy.
+    fn OP_8xy0(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+
+        self.registers[Vx as usize] = self.registers[Vy as usize];
+    }
 }
