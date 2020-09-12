@@ -364,10 +364,24 @@ impl Chip8 {
         self.index_register = address;
     }
 
-    /// OPCOD BNNN - Jump to location nnn + V0
+    /// OPCODE BNNN - Jump to location nnn + V0
+    // TODO: test if this actually works
     fn OP_Bnnn(&mut self) {
         let address: u16 = self.op_code & 0x0FFF;
 
         self.program_counter = self.registers[0] as u16 + address;
+    }
+
+    /// OPCODE CXKK - Set Vx = random byte AND kk.
+    fn OP_Cxkk(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let byte: u16 = self.op_code & 0x00FF;
+
+        let byte: u8 = match u8::try_from(byte) {
+            Ok(number) => number,
+            Err(error) => panic!("Could not turn u16 into u8 in OPCODE CXKK. Error: {}", error),
+        };
+
+        self.registers[Vx as usize] = self.rand_byte() & byte;
     }
 }
