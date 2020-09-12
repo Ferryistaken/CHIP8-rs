@@ -176,6 +176,8 @@ impl Chip8 {
         self.program_counter = address;
     }
 
+    // TODO: Make all of these `Vx` Variables `u8` instead of `u16`
+
     /// OPCODE 3XKK - Skip next instruction if Vx = kk
     /// Since our PC has already been incremented by 2 in Cycle(), we can just increment by 2 again to skip the next instruction.
     fn OP_3xkk(&mut self) {
@@ -204,6 +206,16 @@ impl Chip8 {
 
         // this != is the onlh difference from the function above
         if self.registers[Vx as usize] != byte {
+            self.program_counter += 2;
+        }
+    }
+
+    /// OPCODE 5XY0 - Skip next instruction if Vx = Vy.
+    fn OP_5xy0(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+
+        if self.registers[Vx as usize] == self.registers[Vy as usize] {
             self.program_counter += 2;
         }
     }
