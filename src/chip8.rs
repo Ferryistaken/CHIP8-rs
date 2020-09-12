@@ -359,8 +359,15 @@ impl Chip8 {
 
     /// OPCODE ANNN - set I = nnn
     fn OP_Annn(&mut self) {
-        let address: u16 = self.op_code & 0x0FFF; 
+        let address: u16 = self.op_code & 0x0FFF;
 
         self.index_register = address;
+    }
+
+    /// OPCOD BNNN - Jump to location nnn + V0
+    fn OP_Bnnn(&mut self) {
+        let address: u16 = self.op_code & 0x0FFF;
+
+        self.program_counter = self.registers[0] as u16 + address;
     }
 }
