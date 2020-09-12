@@ -356,4 +356,11 @@ impl Chip8 {
             self.program_counter += 2;
         }
     }
+
+    /// OPCODE ANNN - set I = nnn
+    fn OP_Annn(&mut self) {
+        let address: u16 = self.op_code & 0x0FFF; 
+
+        self.index_register = address;
+    }
 }
