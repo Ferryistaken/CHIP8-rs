@@ -168,7 +168,6 @@ impl Chip8 {
     }
 
     /// OPCODE 2NNN - Call subroutine at location NNN
-    /// Since our PC has already been incremented by 2 in Cycle(), we can just increment by 2 again to skip the next instruction.
     fn OP_2nnn(&mut self) {
         let address: u16 = self.op_code & 0x0FFF;
 
@@ -178,6 +177,7 @@ impl Chip8 {
     }
 
     /// OPCODE 3XKK - Skip next instruction if Vx = kk
+    /// Since our PC has already been incremented by 2 in Cycle(), we can just increment by 2 again to skip the next instruction.
     fn OP_3xkk(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00) >> 8;
         let byte: u16 = self.op_code & 0x00FF;
@@ -188,6 +188,22 @@ impl Chip8 {
         };
 
         if self.registers[Vx as usize] == byte {
+            self.program_counter += 2;
+        }
+    }
+
+    /// OPCODE 4XKK - Skip next instruction if Vx != kk
+    fn OP_4xkk(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let byte: u16 = self.op_code & 0x00FF;
+
+        let byte: u8 = match u8::try_from(byte) {
+            Ok(number) => number,
+            Err(error) => panic!("Could not turn u16 into u8 in OPCODE: 3XKK. Error: {}", error),
+        };
+
+        // this != is the onlh difference from the function above
+        if self.registers[Vx as usize] != byte {
             self.program_counter += 2;
         }
     }
