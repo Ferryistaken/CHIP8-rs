@@ -1,11 +1,14 @@
+#![allow(non_snake_case)]
+
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::prelude::*;
 use rand::Rng;
+use std::convert::TryFrom;
 
 /// General chip 8 struct
 pub struct Chip8 {
-    register: [u8; 16],
+    registers: [u8; 16],
     memory: [u8; 4096],
     index_register: u16,
     program_counter: u16,
@@ -23,7 +26,7 @@ impl Chip8 {
     ///
     /// ## Values
     ///
-    /// * `register`: all zeroes
+    /// * `registers`: all zeroes
     /// * `memory`/`rom`: all zeroes
     /// * `index_register`: 0
     /// * `program_counter`: 0x200
@@ -37,7 +40,7 @@ impl Chip8 {
     /// * `fontset_size`: 80
     pub fn new() -> Self {
         Chip8 {
-            register: [0; 16],
+            registers: [0; 16],
             memory: [0; 4096],
             index_register: 0,
             program_counter: 0x200,
@@ -165,6 +168,7 @@ impl Chip8 {
     }
 
     /// OPCODE 2NNN - Call subroutine at location NNN
+    /// Since our PC has already been incremented by 2 in Cycle(), we can just increment by 2 again to skip the next instruction.
     fn OP_2nnn(&mut self) {
         let address: u16 = self.op_code & 0x0FFF;
 
@@ -174,8 +178,17 @@ impl Chip8 {
     }
 
     /// OPCODE 3XKK - Skip next instruction if Vx = kk
-    // TODO: actually implment this
-    //fn OP_3xkk(&self) {
-    //    let Vx: u8 = 
-    //}
+    fn OP_3xkk(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let byte: u16 = self.op_code & 0x00FF;
+
+        let byte: u8 = match u8::try_from(byte) {
+            Ok(number) => number,
+            Err(error) => panic!("Could not turn u16 into u8 in OPCODE: 3XKK. Error: {}", error),
+        };
+
+        if self.registers[Vx as usize] == byte {
+            self.program_counter += 2;
+        }
+    }
 }
