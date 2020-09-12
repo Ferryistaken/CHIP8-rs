@@ -219,4 +219,17 @@ impl Chip8 {
             self.program_counter += 2;
         }
     }
+
+    /// OPCODE 6XKK - Set Vx = kk.
+    fn OP_6xkk(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let byte: u16 = self.op_code & 0x00FF;
+
+        let byte = match u8::try_from(byte) {
+            Ok(number) => number,
+            Err(error) => panic!("Could not turn u16 into u8 in OPCODE 6XKK. Error: {}", error),
+        };
+
+        self.registers[Vx as usize] = byte;
+    }
 }
