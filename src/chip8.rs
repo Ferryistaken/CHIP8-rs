@@ -253,4 +253,97 @@ impl Chip8 {
 
         self.registers[Vx as usize] = self.registers[Vy as usize];
     }
+
+    /// OPCODE 8XY1 - Set Vx = Vx OR Vy.
+    fn OP_8xy1(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+
+        self.registers[Vx as usize] |= self.registers[Vy as usize];
+    }
+
+    /// OPCODE 8XY2 - Set Vx = Vx AND Vy
+    fn OP_8xy2(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+
+        self.registers[Vx as usize] &= self.registers[Vy as usize];
+    }
+
+    /// OPCODE 8XY3 - Set Vx = Vx XOR Vy
+    fn OP_8xy3(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+
+        self.registers[Vx as usize] ^= self.registers[Vy as usize];
+    }
+
+    /// OPCODE 8XY4 - Set Vx = Vx + Vy, set VF = carry.
+    /// The values of Vx and Vy are added together. If the result is greater than 8 bits (i.e., > 255,) VF is set to 1, otherwise 0. Only the lowest 8 bits of the result are kept, and stored in Vx.
+    fn OP_8xy4(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+
+        let sum: u16 = (self.registers[Vx as usize] + self.registers[Vy as usize]) as u16;
+
+        if sum > 255 {
+            self.registers[0xF] = 1;
+        } else {
+            self.registers[0xF] = 0;
+        }
+
+        self.registers[Vx as usize] = (sum & 0xFF) as u8;
+    }
+
+    /// OPCODE 8XY5 - Set Vx = Vx - Vy, set VF = NOT borrow.
+    /// If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
+    fn OP_8xy5(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+
+        if self.registers[Vx as usize] > self.registers[Vy as usize] {
+            self.registers[0xF] = 1;
+        } else {
+            self.registers[0xF] = 0;
+        }
+
+        self.registers[Vx as usize] -= self.registers[Vy as usize];
+    }
+
+    /// OPCODE 8XY6 - Set Vx = Vx SHR 1.
+    /// If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
+    fn OP_8xy6(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        // Save LSB in VF
+        self.registers[0xF] = self.registers[Vx as usize] & 0x1;
+
+        self.registers[Vx as usize] >>= 1;
+    }
+
+    /// OPCODE 8XY7 - SUBN Vx, Vy
+    /// If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+    fn OP_8xy7(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+
+        if self.registers[Vy as usize] > self.registers[Vx as usize] {
+            self.registers[0xF] = 1;
+        } else {
+            self.registers[0xF] = 0;
+        }
+
+        self.registers[Vx as usize] = self.registers[Vy as usize] - self.registers[Vx as usize];
+    }
+
+    /// OPCODE 8XYE - Set Vx = Vx SHL 1.
+    /// If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
+    fn OP_xyE(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        // save MSB in VF
+        self.registers[0xF] = (self.registers[Vx as usize] & 0x80) >> 7;
+
+        self.registers[Vx as usize] <<= 1;
+    }
 }
