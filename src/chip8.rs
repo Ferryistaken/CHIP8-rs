@@ -384,4 +384,53 @@ impl Chip8 {
 
         self.registers[Vx as usize] = self.rand_byte() & byte;
     }
+
+    /// OPCODE DXYN - Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+    // TODO: fix this
+    fn OP_Dxyn(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let height: u16 = self.op_code & 0x000F;
+        let VIDEO_WIDTH: u8 = 64;
+        let VIDEO_HEIGHT: u8 = 32;
+
+        let x_pos: u8 = self.registers[Vx as usize] % VIDEO_WIDTH;
+        let y_pos: u8 = self.registers[Vy as usize] % VIDEO_HEIGHT;
+
+        self.registers[0xF] = 0;
+
+        for row in 0..height {
+            let sprite_byte: u8 = self.memory[(self.index_register + row) as usize];
+
+            for col in 0..8 {
+                let sprite_pixel = sprite_byte & (0x80 >> col);
+                let screen_pixel = self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col)) as usize];
+
+                // sprite pixel is on
+                if sprite_pixel != 0 {
+                    // screen pixel also on - collision
+                    /*
+                    if screen_pixel == 0xFFFFFFFF {
+                        self.registers[0xF] = 1;
+                    }
+
+                    // Effectively XOR with the sprite pixel
+                    screen_pixel ^= 0xFFFFFFFF;
+                */
+                }
+            }
+        }
+    }
+
+    /// OPCODE EX9E - Skip next instruction if key with the value of Vx is pressed.
+    fn OP_Ex9E(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let key: u8 = self.registers[Vx as usize];
+
+        if self.keypad[key as usize] != 0 {
+            self.program_counter += 2;
+        }
+    }
+
+
 }
