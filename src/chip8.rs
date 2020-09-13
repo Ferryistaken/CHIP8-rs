@@ -17,7 +17,7 @@ pub struct Chip8 {
     delay_timer: u8,
     sound_timer: u8,
     keypad: [u8; 16],
-    video: [[u32; 64]; 32],
+    video: [u32; 64*32],
     op_code: u16,
 }
 
@@ -39,7 +39,7 @@ impl Chip8 {
     /// * `op_code`: 0
     /// * `fontset_size`: 80
     pub fn new() -> Self {
-        Chip8 {
+        let mut chip8 = Chip8 {
             registers: [0; 16],
             memory: [0; 4096],
             index_register: 0,
@@ -49,9 +49,13 @@ impl Chip8 {
             delay_timer: 0,
             sound_timer: 0,
             keypad: [0; 16],
-            video: [[15; 64]; 32],
+            video: [0; 2048],
             op_code: 0,
-        }
+        };
+
+        chip8.load_fonts();
+
+        return chip8;
     }
 
     pub fn load_rom(&mut self, path: PathBuf) {
@@ -90,20 +94,24 @@ impl Chip8 {
         return rom;
     }
 
-    pub fn dump_video(&mut self) -> Vec<&u32> {
-        let mut buf: Vec<&u32> = Vec::new();
+    pub fn dump_video(&mut self) -> Vec<u32> {
+        let mut buf: Vec<u32> = Vec::new();
+        /*
         for (_i, row) in self.video.iter_mut().enumerate() {
             for (_y, col) in row.iter_mut().enumerate() {
                 println!("{}", col);
                 buf.push(col);
             }
         }
+        */
+        for i in 0..self.video.len() {
+            buf.push(self.video[i]);
+        }
         return buf;
     }
 
     /// Load the fontset into memory
-    fn load_fonts(mut self) {
-        // TODO: load fonts in the constructor
+    fn load_fonts(&mut self) {
         let fontset: [u8; 80] = [
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -147,9 +155,7 @@ impl Chip8 {
     /// OPCODE 00E0 - Clear Screen
     pub fn OP_00E0(&mut self) {
         // set video buffer to zero
-        // memset doesn't work
-        // self.video.iter_mut().for_each(|m| *m = [0; 64])
-        self.video = [[0; 64]; 32];
+        self.video = [0; 2048];
     }
 
     /// OPCODE 00EE - Return from subroutine
@@ -404,19 +410,17 @@ impl Chip8 {
 
             for col in 0..8 {
                 let sprite_pixel = sprite_byte & (0x80 >> col);
-                let screen_pixel = self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col)) as usize];
+                let mut screen_pixel = self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col)) as usize];
 
                 // sprite pixel is on
                 if sprite_pixel != 0 {
                     // screen pixel also on - collision
-                    /*
                     if screen_pixel == 0xFFFFFFFF {
                         self.registers[0xF] = 1;
                     }
 
                     // Effectively XOR with the sprite pixel
                     screen_pixel ^= 0xFFFFFFFF;
-                */
                 }
             }
         }
