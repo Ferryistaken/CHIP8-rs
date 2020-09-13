@@ -392,7 +392,6 @@ impl Chip8 {
     }
 
     /// OPCODE DXYN - Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
-    // TODO: fix this
     fn OP_Dxyn(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00) >> 8;
         let Vy: u16 = (self.op_code & 0x00F0) >> 4;
@@ -405,10 +404,10 @@ impl Chip8 {
 
         self.registers[0xF] = 0;
 
-        for row in 0..height {
+        for row in 0..(height - 1) {
             let sprite_byte: u8 = self.memory[(self.index_register + row) as usize];
 
-            for col in 0..8 {
+            for col in 0..(height - 1) {
                 let sprite_pixel = sprite_byte & (0x80 >> col);
                 let mut screen_pixel = self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col)) as usize];
 
