@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 
-use std::path::PathBuf;
-use std::fs::File;
-use std::io::prelude::*;
 use rand::Rng;
 use std::convert::TryFrom;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::PathBuf;
 
 /// General chip 8 struct
 pub struct Chip8 {
@@ -17,7 +17,7 @@ pub struct Chip8 {
     delay_timer: u8,
     sound_timer: u8,
     keypad: [u8; 16],
-    video: [u32; 64*32],
+    video: [u32; 64 * 32],
     op_code: u16,
 }
 
@@ -60,7 +60,7 @@ impl Chip8 {
 
     pub fn load_rom(&mut self, path: PathBuf) {
         // memory addres before this are reserved
-        let start_address = 0x200; 
+        let start_address = 0x200;
 
         // open rom file
         let file = File::open(path).expect("Error opening rom file");
@@ -128,7 +128,7 @@ impl Chip8 {
             0xF0, 0x80, 0x80, 0x80, 0xF0, // C
             0xE0, 0x90, 0x90, 0x90, 0xE0, // D
             0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-            0xF0, 0x80, 0xF0, 0x80, 0x80  // F];
+            0xF0, 0x80, 0xF0, 0x80, 0x80, // F];
         ];
 
         let fontset_start_address = 0x50;
@@ -192,7 +192,10 @@ impl Chip8 {
 
         let byte: u8 = match u8::try_from(byte) {
             Ok(number) => number,
-            Err(error) => panic!("Could not turn u16 into u8 in OPCODE: 3XKK. Error: {}", error),
+            Err(error) => panic!(
+                "Could not turn u16 into u8 in OPCODE: 3XKK. Error: {}",
+                error
+            ),
         };
 
         if self.registers[Vx as usize] == byte {
@@ -207,7 +210,10 @@ impl Chip8 {
 
         let byte: u8 = match u8::try_from(byte) {
             Ok(number) => number,
-            Err(error) => panic!("Could not turn u16 into u8 in OPCODE: 3XKK. Error: {}", error),
+            Err(error) => panic!(
+                "Could not turn u16 into u8 in OPCODE: 3XKK. Error: {}",
+                error
+            ),
         };
 
         // this != is the onlh difference from the function above
@@ -233,7 +239,10 @@ impl Chip8 {
 
         let byte: u8 = match u8::try_from(byte) {
             Ok(number) => number,
-            Err(error) => panic!("Could not turn u16 into u8 in OPCODE 6XKK. Error: {}", error),
+            Err(error) => panic!(
+                "Could not turn u16 into u8 in OPCODE 6XKK. Error: {}",
+                error
+            ),
         };
 
         self.registers[Vx as usize] = byte;
@@ -246,7 +255,10 @@ impl Chip8 {
 
         let byte: u8 = match u8::try_from(byte) {
             Ok(number) => number,
-            Err(error) => panic!("Could not turn u16 into u8 in OPCODE 7XKK. Error: {}", error),
+            Err(error) => panic!(
+                "Could not turn u16 into u8 in OPCODE 7XKK. Error: {}",
+                error
+            ),
         };
 
         self.registers[Vx as usize] += byte;
@@ -385,7 +397,10 @@ impl Chip8 {
 
         let byte: u8 = match u8::try_from(byte) {
             Ok(number) => number,
-            Err(error) => panic!("Could not turn u16 into u8 in OPCODE CXKK. Error: {}", error),
+            Err(error) => panic!(
+                "Could not turn u16 into u8 in OPCODE CXKK. Error: {}",
+                error
+            ),
         };
 
         self.registers[Vx as usize] = self.rand_byte() & byte;
@@ -410,7 +425,8 @@ impl Chip8 {
             for col in 0..(height - 1) {
                 let sprite_pixel = sprite_byte & (0x80 >> col);
                 // casting without error checking here is fine because col and raw wil alwyays be lower than 255(they are 64 and 32)
-                let mut screen_pixel = self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col as u8)) as usize];
+                let mut screen_pixel =
+                    self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col as u8)) as usize];
 
                 // sprite pixel is on
                 if sprite_pixel != 0 {
@@ -436,5 +452,63 @@ impl Chip8 {
         }
     }
 
+    /// OPCODE EXA1 - Skip next instruction if key with the value of Vx is not pressed
+    fn OP_ExA1(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let key: u8 = self.registers[Vx as usize];
 
+        if self.keypad[key as usize] == 0 {
+            self.program_counter += 2;
+        }
+    }
+
+    /// OPCODE FX07 - Set Vx = delay timer value
+    fn OP_Fx07(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        self.registers[Vx as usize] = self.delay_timer;
+    }
+
+    /// OPCODE FX0A - Wait for a key press, store the value of the key in Vx.
+    fn OP_Fx0A(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        if self.keypad[0] != 0 {
+            self.registers[Vx as usize] = 0;
+        } else if self.keypad[1] != 0 {
+            self.registers[Vx as usize] = 1;
+        } else if self.keypad[2] != 0 {
+            self.registers[Vx as usize] = 2;
+        } else if self.keypad[3] != 0 {
+            self.registers[Vx as usize] = 3;
+        } else if self.keypad[4] != 0 {
+            self.registers[Vx as usize] = 4;
+        } else if self.keypad[5] != 0 {
+            self.registers[Vx as usize] = 5;
+        } else if self.keypad[6] != 0 {
+            self.registers[Vx as usize] = 6;
+        } else if self.keypad[7] != 0 {
+            self.registers[Vx as usize] = 7;
+        } else if self.keypad[8] != 0 {
+            self.registers[Vx as usize] = 8;
+        } else if self.keypad[9] != 0 {
+            self.registers[Vx as usize] = 9;
+        } else if self.keypad[10] != 0 {
+            self.registers[Vx as usize] = 10;
+        } else if self.keypad[11] != 0 {
+            self.registers[Vx as usize] = 11;
+        } else if self.keypad[12] != 0 {
+            self.registers[Vx as usize] = 12;
+        } else if self.keypad[13] != 0 {
+            self.registers[Vx as usize] = 13;
+        } else if self.keypad[14] != 0 {
+            self.registers[Vx as usize] = 14;
+        } else if self.keypad[15] != 0 {
+            self.registers[Vx as usize] = 15;
+        } else if self.keypad[16] != 0 {
+            self.registers[Vx as usize] = 16;
+        } else {
+            self.program_counter -= 2;
+        }
+    }
 }
