@@ -409,7 +409,8 @@ impl Chip8 {
 
             for col in 0..(height - 1) {
                 let sprite_pixel = sprite_byte & (0x80 >> col);
-                let mut screen_pixel = self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col)) as usize];
+                // casting without error checking here is fine because col and raw wil alwyays be lower than 255(they are 64 and 32)
+                let mut screen_pixel = self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col as u8)) as usize];
 
                 // sprite pixel is on
                 if sprite_pixel != 0 {
