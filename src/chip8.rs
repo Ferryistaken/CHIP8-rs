@@ -511,4 +511,52 @@ impl Chip8 {
             self.program_counter -= 2;
         }
     }
+
+    /// OPCODE FX15 - Set delay timer = Vx.
+    fn OP_Fx15(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        self.delay_timer = self.registers[Vx as usize];
+    }
+
+    /// OPCODE FX18 - Set sound timer = Vx.
+    fn OP_Fx18(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        self.sound_timer = self.registers[Vx as usize];
+    }
+
+    /// OPCODE FX1E - Set I = I + Vx.
+    fn OP_Fx1E(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        self.index_register += self.registers[Vx as usize] as u16;
+    }
+
+    /// OPCODE FX29 - Set I = location of sprite for digit Vx.
+    fn OP_Fx29(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let digit = self.registers[Vx as usize];
+        let fontset_start_address = 0x50;
+
+        self.index_register = (fontset_start_address + (5*digit)) as u16;
+    }
+
+    /// OPCODE FX33 - Store BCD representation of Vx in memory locations I, I+1, and I+2.
+    /// The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
+    fn OP_Fx33(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let mut value: u8 = self.registers[Vx as usize];
+
+        // ones place
+        self.memory[(self.index_register + 2) as usize] = value % 10;
+        value /= 10;
+
+        // tens place
+        self.memory[(self.index_register + 1) as usize] = value %10;
+        value /= 10;
+
+        // hundreds place
+        self.memory[self.index_register as usize] = value % 10;
+    }
 }
