@@ -6,6 +6,7 @@ use chip8::Chip8;
 fn main() {
     let mut chip8: Chip8 = Chip8::new();
 
+    // TODO: make it so that the file is taken as a positional argument
     chip8.load_rom(PathBuf::from(
         "/home/ferry/Documents/projects/rust/chip8-rs/roms/Chip8-Picture.ch8",
     ));

@@ -553,10 +553,28 @@ impl Chip8 {
         value /= 10;
 
         // tens place
-        self.memory[(self.index_register + 1) as usize] = value %10;
+        self.memory[(self.index_register + 1) as usize] = value % 10;
         value /= 10;
 
         // hundreds place
         self.memory[self.index_register as usize] = value % 10;
+    }
+
+    /// OPCODE FX55 -- Store registers V0 to VX in memory starting at location X
+    fn OP_Fx55(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        for i in 0..(Vx - 1) {
+            self.memory[(self.index_register + i) as usize] = self.registers[i as usize];
+        }
+    }
+
+    /// OPCODE FX65 - Read registers V0 through Vx from memory starting at location I.
+    fn OP_Fx65(&mut self) {
+        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+
+        for i in 0..(Vx - 1) {
+            self.registers[i as usize] = self.memory[(self.index_register + i) as usize];
+        }
     }
 }
