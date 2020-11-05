@@ -58,12 +58,13 @@ impl Chip8 {
         return chip8;
     }
 
+    /// Loads a given rom into memory, starting from memory address 0x200
     pub fn load_rom(&mut self, path: PathBuf) {
         // memory addres before this are reserved
         let start_address = 0x200;
 
         // open rom file
-        let file = File::open(path).expect("Error opening rom file");
+        let file: File = File::open(path).expect("Error opening rom file");
 
         // buffer to store bytes in
         let mut buf: Vec<u8> = Vec::new();
@@ -383,7 +384,6 @@ impl Chip8 {
     }
 
     /// OPCODE BNNN - Jump to location nnn + V0
-    // TODO: test if this actually works
     fn OP_Bnnn(&mut self) {
         let address: u16 = self.op_code & 0x0FFF;
 

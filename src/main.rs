@@ -8,7 +8,7 @@ fn main() {
 
     // TODO: make it so that the file is taken as a positional argument
     chip8.load_rom(PathBuf::from(
-        "/home/ferry/Documents/projects/rust/chip8-rs/roms/Chip8-Picture.ch8",
+        "roms/Chip8-Picture.ch8",
     ));
 
     let _rom: Vec<u8> = chip8.dump_rom(0x0, 30);
