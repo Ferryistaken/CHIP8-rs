@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
+
 /// General chip 8 struct
 pub struct Chip8 {
     registers: [u8; 16],
@@ -20,7 +21,13 @@ pub struct Chip8 {
     video: [u32; 64 * 32],
     op_code: u16,
 }
-
+/*
+    table: [for<'r> fn(&'r mut Chip8); 16],
+    table0: [for<'r> fn(&'r mut Chip8); 2],
+    table8: [for<'r> fn(&'r mut Chip8); 9],
+    tableE: [for<'r> fn(&'r mut Chip8); 2],
+    tableF: [for<'r> fn(&'r mut Chip8); 9],
+*/
 impl Chip8 {
     /// Create a new chip8 instance with an empty `rom`, ready for use
     ///
@@ -39,6 +46,29 @@ impl Chip8 {
     /// * `op_code`: 0
     /// * `fontset_size`: 80
     pub fn new() -> Self {
+
+        // FIXME: make table0 and table8 functions actually do something
+        // FIXME: some indices might be wrong: they aren't in numerical order, some go from 0x6 to 0xE
+        // TODO: This might not work, will probably need a switch statement
+        /*
+        let mut table = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
+        let mut table0 = [Chip8::OP_00E0, Chip8::OP_00EE];
+        let mut table8 = [Chip8::OP_8xy0, Chip8::OP_8xy1, Chip8::OP_8xy2, Chip8::OP_8xy3, Chip8::OP_8xy4 ,Chip8::OP_8xy5 ,Chip8::OP_8xy6 ,Chip8::OP_8xy7 ,Chip8::OP_8xyE];
+        let mut tableE = [Chip8::OP_ExA1, Chip8::OP_Ex9E];
+        
+        let mut tableF: [for<'r> fn(&'r mut Chip8); _] = [];
+        tableF[0x07] = Chip8::OP_Fx07;
+        tableF[0x0A] = Chip8::OP_Fx0A;
+        tableF[0x15] = Chip8::OP_Fx15;
+        tableF[0x18] = Chip8::OP_Fx18;
+        tableF[0x1E] = Chip8::OP_Fx1E;
+        tableF[0x29] = Chip8::OP_Fx07;
+        tableF[0x33] = Chip8::OP_Fx07;
+        tableF[0x55] = Chip8::OP_Fx07;
+        tableF[0x65] = Chip8::OP_Fx07;
+        */
+
+
         let mut chip8 = Chip8 {
             registers: [0; 16],
             memory: [0; 4096],
@@ -56,6 +86,10 @@ impl Chip8 {
         chip8.load_fonts();
 
         return chip8;
+    }
+
+    pub fn add_function_pointer_table(&mut self) {
+
     }
 
     /// Loads a given rom into memory, starting from memory address 0x200
@@ -357,7 +391,7 @@ impl Chip8 {
 
     /// OPCODE 8XYE - Set Vx = Vx SHL 1.
     /// If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
-    fn OP_xyE(&mut self) {
+    fn OP_8xyE(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00) >> 8;
 
         // save MSB in VF
@@ -577,4 +611,30 @@ impl Chip8 {
             self.registers[i as usize] = self.memory[(self.index_register + i) as usize];
         }
     }
+
+    /// OPCODE to do nothing
+    fn Table0(&mut self) {
+        //self.tables.table0[(self.op_code & 0x000F) as usize]();
+        fn hello() {
+            println!("hello");
+        }
+
+        let test = hello();
+    }
+
+    fn Table8(&mut self) {
+        
+    }
+
+    fn TableE(&mut self) {
+        
+    }
+    
+    fn TableF(&mut self) {
+        
+    }
+
+    // the opcodes are stored in memory starting from index 512, i need to decode them and map each opcode to one of my functions
+    // The CHIP-8 Architecture uses big-endian (0x00 0xe0 -> 0x00e0)
+
 }
