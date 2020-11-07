@@ -637,4 +637,16 @@ impl Chip8 {
     // the opcodes are stored in memory starting from index 512, i need to decode them and map each opcode to one of my functions
     // The CHIP-8 Architecture uses big-endian (0x00 0xe0 -> 0x00e0)
 
+    fn Cycle(&mut self) {
+        // Fetch opcode
+        let opcode = (self.memory[self.program_counter as usize] << 8 | self.memory[(self.program_counter + 1) as usize]);
+
+        // increment pc before we do anything
+        self.program_counter += 2;
+
+        // decode and execute
+        // TODO: actually implement this
+        
+    }
+
 }

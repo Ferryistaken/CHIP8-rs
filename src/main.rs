@@ -13,3 +13,4 @@ fn main() {
 
     let _rom: Vec<u8> = chip8.dump_rom(0x0, 30);
 }
+
