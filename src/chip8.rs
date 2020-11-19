@@ -9,8 +9,7 @@ use std::path::PathBuf;
 
 /// General chip 8 struct
 pub struct Chip8 {
-    registers: [u8; 16],
-    memory: [u8; 4096],
+    registers: [u8; 16], memory: [u8; 4096],
     index_register: u16,
     program_counter: u16,
     stack: [u16; 16],
@@ -623,15 +622,15 @@ impl Chip8 {
     }
 
     fn Table8(&mut self) {
-        
+
     }
 
     fn TableE(&mut self) {
-        
+
     }
-    
+
     fn TableF(&mut self) {
-        
+
     }
 
     // the opcodes are stored in memory starting from index 512, i need to decode them and map each opcode to one of my functions
@@ -646,7 +645,7 @@ impl Chip8 {
 
         // decode and execute
         // TODO: actually implement this
-        
+
     }
 
 }
