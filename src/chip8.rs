@@ -55,7 +55,7 @@ impl Chip8 {
         let mut table0 = [Chip8::OP_00E0, Chip8::OP_00EE];
         let mut table8 = [Chip8::OP_8xy0, Chip8::OP_8xy1, Chip8::OP_8xy2, Chip8::OP_8xy3, Chip8::OP_8xy4 ,Chip8::OP_8xy5 ,Chip8::OP_8xy6 ,Chip8::OP_8xy7 ,Chip8::OP_8xyE];
         let mut tableE = [Chip8::OP_ExA1, Chip8::OP_Ex9E];
-        
+
         let mut tableF: [for<'r> fn(&'r mut Chip8); _] = [];
         tableF[0x07] = Chip8::OP_Fx07;
         tableF[0x0A] = Chip8::OP_Fx0A;
@@ -623,15 +623,15 @@ impl Chip8 {
     }
 
     fn Table8(&mut self) {
-        
+
     }
 
     fn TableE(&mut self) {
-        
+
     }
-    
+
     fn TableF(&mut self) {
-        
+
     }
 
     // the opcodes are stored in memory starting from index 512, i need to decode them and map each opcode to one of my functions
@@ -646,7 +646,7 @@ impl Chip8 {
 
         // decode and execute
         // TODO: actually implement this
-        
+
     }
 
 }
