@@ -9,8 +9,7 @@ use std::path::PathBuf;
 
 /// General chip 8 struct
 pub struct Chip8 {
-    registers: [u8; 16],
-    memory: [u8; 4096],
+    registers: [u8; 16], memory: [u8; 4096],
     index_register: u16,
     program_counter: u16,
     stack: [u16; 16],
