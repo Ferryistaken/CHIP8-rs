@@ -49,14 +49,14 @@ impl Chip8 {
         // FIXME: make table0 and table8 functions actually do something
         // FIXME: some indices might be wrong: they aren't in numerical order, some go from 0x6 to 0xE
         // TODO: This might not work, will probably need a switch statement
-        /*
+        
         let mut table = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
         let mut table0 = [Chip8::OP_00E0, Chip8::OP_00EE];
         let mut table8 = [Chip8::OP_8xy0, Chip8::OP_8xy1, Chip8::OP_8xy2, Chip8::OP_8xy3, Chip8::OP_8xy4 ,Chip8::OP_8xy5 ,Chip8::OP_8xy6 ,Chip8::OP_8xy7 ,Chip8::OP_8xyE];
         let mut tableE = [Chip8::OP_ExA1, Chip8::OP_Ex9E];
 
         let mut tableF: [for<'r> fn(&'r mut Chip8); _] = [];
-        tableF[0x07] = Chip8::OP_Fx07;
+        tableF[0x07] = &Chip8::OP_Fx07;
         tableF[0x0A] = Chip8::OP_Fx0A;
         tableF[0x15] = Chip8::OP_Fx15;
         tableF[0x18] = Chip8::OP_Fx18;
@@ -65,7 +65,7 @@ impl Chip8 {
         tableF[0x33] = Chip8::OP_Fx07;
         tableF[0x55] = Chip8::OP_Fx07;
         tableF[0x65] = Chip8::OP_Fx07;
-        */
+        
 
 
         let mut chip8 = Chip8 {
@@ -621,7 +621,7 @@ impl Chip8 {
         let test = hello();
     }
 
-    fn Table8(&mut self) {
+    /*fn Table8(&mut self) {
 
     }
 
@@ -632,6 +632,7 @@ impl Chip8 {
     fn TableF(&mut self) {
 
     }
+    */
 
     // the opcodes are stored in memory starting from index 512, i need to decode them and map each opcode to one of my functions
     // The CHIP-8 Architecture uses big-endian (0x00 0xe0 -> 0x00e0)
@@ -645,7 +646,7 @@ impl Chip8 {
 
         // decode and execute
         // TODO: actually implement this
-        self.tab
+        //self.tab
 
     }
 
