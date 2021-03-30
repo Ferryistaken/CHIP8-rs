@@ -126,10 +126,6 @@ impl Chip8 {
         self.tableE = tableE;
     }
 
-    pub fn add_function_pointer_table(&mut self) {
-
-    }
-
     /// Loads a given rom into memory, starting from memory address 0x200
     pub fn load_rom(&mut self, path: PathBuf) {
         // memory addres before this are reserved
@@ -684,6 +680,16 @@ impl Chip8 {
         // decode and execute
         // TODO: actually implement this
         self.table[((self.op_code & 0xF000) >> 12) as usize](self);
+
+        // Decrement delay timer if it exists
+        if (self.delay_timer > 0) {
+            self.delay_timer -= 1;
+        }
+
+        // Decrement sound timer if it exists
+        if (self.sound_timer > 0) {
+            self.sound_timer -= 1;
+        }
 
     }
 
