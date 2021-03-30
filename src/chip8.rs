@@ -20,8 +20,8 @@ pub struct Chip8 {
     video: [u32; 64 * 32],
     op_code: u16,
     table: [fn(&mut Chip8); 16],
-    //table0: Vec<fn()>,
-    //table8: Vec<fn()>,
+    table0: [fn(&mut Chip8); 15],
+    table8: [fn(&mut Chip8); 15],
     //tableE: Vec<fn()>,
     //tableF: Vec<fn()>,
 }
@@ -69,7 +69,10 @@ impl Chip8 {
             keypad: [0; 16],
             video: [0; 2048],
             op_code: 0,
+            // HACK: the use of the closure |_| println("x") is a hack, I should find something more efficient since I am creating this closure without reason.
             table: [|_| println!("x"); 16],
+            table0: [|_| println!("x"); 15],
+            table8: [|_| println!("x"); 15],
         };
 
         chip8.load_fonts();
@@ -79,11 +82,30 @@ impl Chip8 {
         return chip8;
     }
 
+    /// Add the correct function pointer tables to the newly created Chip8 object
     pub fn add_table(&mut self) {
         let mut table: [fn(&mut Chip8); 16] = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
-        //println!("{}", table.len());
+        // I make "default" values this closure here so that when I find a better way to do it I only change it here
+        let mut table0: [fn(&mut Chip8); 15] = [|_| println!("x"); 15];
+        let mut table8: [fn(&mut Chip8); 15] = [|_| println!("x"); 15];
 
+        table0[0x0] = Chip8::OP_00E0;
+        table0[0xE] = Chip8::OP_00EE;
+
+        table8[0x0] = Chip8::OP_8xy0;
+        table8[0x1] = Chip8::OP_8xy1;
+        table8[0x2] = Chip8::OP_8xy2;
+        table8[0x3] = Chip8::OP_8xy3;
+        table8[0x4] = Chip8::OP_8xy4;
+        table8[0x5] = Chip8::OP_8xy5;
+        table8[0x6] = Chip8::OP_8xy6;
+        table8[0x7] = Chip8::OP_8xy7;
+        table8[0xE] = Chip8::OP_8xyE;
+
+
+        // Apply the newly generated tables
         self.table = table;
+        self.table0 = table0;
     }
 
     pub fn add_function_pointer_table(&mut self) {
