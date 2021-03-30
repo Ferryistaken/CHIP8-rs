@@ -19,11 +19,11 @@ pub struct Chip8 {
     keypad: [u8; 16],
     video: [u32; 64 * 32],
     op_code: u16,
-    table: [fn(&mut Chip8); 16],
-    table0: [fn(&mut Chip8); 15],
-    table8: [fn(&mut Chip8); 15],
-    //tableE: Vec<fn()>,
-    //tableF: Vec<fn()>,
+    table: [fn(&mut Chip8); 0xF+1],
+    table0: [fn(&mut Chip8); 0xE+1],
+    table8: [fn(&mut Chip8); 0xE+1],
+    tableE: [fn(&mut Chip8); 0xE+1],
+    tableF: [fn(&mut Chip8); 0x65+1],
 }
 /*
     table: [for<'r> fn(&'r mut Chip8); 16],
@@ -69,10 +69,11 @@ impl Chip8 {
             keypad: [0; 16],
             video: [0; 2048],
             op_code: 0,
-            // HACK: the use of the closure |_| println("x") is a hack, I should find something more efficient since I am creating this closure without reason.
-            table: [|_| println!("x"); 16],
-            table0: [|_| println!("x"); 15],
-            table8: [|_| println!("x"); 15],
+            table: [Chip8::OP_ERR; 0xF+1],
+            table0: [Chip8::OP_ERR; 0xE+1],
+            table8: [Chip8::OP_ERR; 0xE+1],
+            tableE: [Chip8::OP_ERR; 0xE+1],
+            tableF: [Chip8::OP_ERR; 0x65+1]
         };
 
         chip8.load_fonts();
@@ -84,10 +85,12 @@ impl Chip8 {
 
     /// Add the correct function pointer tables to the newly created Chip8 object
     pub fn add_table(&mut self) {
-        let mut table: [fn(&mut Chip8); 16] = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
-        // I make "default" values this closure here so that when I find a better way to do it I only change it here
-        let mut table0: [fn(&mut Chip8); 15] = [|_| println!("x"); 15];
-        let mut table8: [fn(&mut Chip8); 15] = [|_| println!("x"); 15];
+        let mut table: [fn(&mut Chip8); 0xF+1] = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
+        // TODO: filling them with OP_ERR is redundant as I already do so when creating the array in the constructor
+        let mut table0: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];
+        let mut table8: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];
+        let mut tableE: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];
+        let mut tableF: [fn(&mut Chip8); 0x65+1] = [Chip8::OP_ERR; 0x65+1];
 
         table0[0x0] = Chip8::OP_00E0;
         table0[0xE] = Chip8::OP_00EE;
@@ -102,10 +105,25 @@ impl Chip8 {
         table8[0x7] = Chip8::OP_8xy7;
         table8[0xE] = Chip8::OP_8xyE;
 
+        tableE[0x1] = Chip8::OP_ExA1;
+        tableE[0xE] = Chip8::OP_Ex9E;
+
+        tableF[0x07] = Chip8::OP_Fx07;
+        tableF[0x0A] = Chip8::OP_Fx0A;
+        tableF[0x15] = Chip8::OP_Fx15;
+        tableF[0x18] = Chip8::OP_Fx18;
+        tableF[0x1E] = Chip8::OP_Fx1E;
+        tableF[0x29] = Chip8::OP_Fx29;
+        tableF[0x33] = Chip8::OP_Fx33;
+        tableF[0x55] = Chip8::OP_Fx55;
+        tableF[0x65] = Chip8::OP_Fx65;
+
 
         // Apply the newly generated tables
         self.table = table;
         self.table0 = table0;
+        self.table8 = table8;
+        self.tableE = tableE;
     }
 
     pub fn add_function_pointer_table(&mut self) {
@@ -559,8 +577,6 @@ impl Chip8 {
             self.registers[Vx as usize] = 14;
         } else if self.keypad[15] != 0 {
             self.registers[Vx as usize] = 15;
-        } else if self.keypad[16] != 0 {
-            self.registers[Vx as usize] = 16;
         } else {
             self.program_counter -= 2;
         }
@@ -632,22 +648,26 @@ impl Chip8 {
         }
     }
 
-    /// OPCODE to do nothing
-    fn Table0(&mut self) {
+    /// Fallback OPCODE
+    fn OP_ERR(&mut self) {
+       eprintln!("[ERROR]: Opcode {} not valid", self.op_code); 
+    }
+    
 
-        println!("TABLE0 EXECUTED");
+    fn Table0(&mut self) {
+        self.table0[(self.op_code & 0x000F) as usize](self);
     }
 
     fn Table8(&mut self) {
-
+        self.table8[(self.op_code & 0x000F) as usize](self);
     }
 
     fn TableE(&mut self) {
-
+        self.tableE[(self.op_code & 0x000F) as usize](self);
     }
 
     fn TableF(&mut self) {
-
+        self.tableF[(self.op_code & 0x00FF) as usize](self);
     }
     
 
