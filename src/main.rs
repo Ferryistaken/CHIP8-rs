@@ -11,6 +11,7 @@ fn main() {
         "roms/Chip8-Picture.ch8",
     ));
 
+    println!("Program loaded, dumping rom");
     let _rom: Vec<u8> = chip8.dump_rom(0x0, 30);
 }
 

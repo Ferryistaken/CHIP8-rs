@@ -19,6 +19,11 @@ pub struct Chip8 {
     keypad: [u8; 16],
     video: [u32; 64 * 32],
     op_code: u16,
+    table: [fn(&mut Chip8); 16],
+    //table0: Vec<fn()>,
+    //table8: Vec<fn()>,
+    //tableE: Vec<fn()>,
+    //tableF: Vec<fn()>,
 }
 /*
     table: [for<'r> fn(&'r mut Chip8); 16],
@@ -49,26 +54,10 @@ impl Chip8 {
         // FIXME: make table0 and table8 functions actually do something
         // FIXME: some indices might be wrong: they aren't in numerical order, some go from 0x6 to 0xE
         // TODO: This might not work, will probably need a switch statement
+        // https://stackoverflow.com/questions/24728394/is-there-a-way-to-create-a-function-pointer-to-a-method-in-rust
+
         
-        let mut table = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
-        let mut table0 = [Chip8::OP_00E0, Chip8::OP_00EE];
-        let mut table8 = [Chip8::OP_8xy0, Chip8::OP_8xy1, Chip8::OP_8xy2, Chip8::OP_8xy3, Chip8::OP_8xy4 ,Chip8::OP_8xy5 ,Chip8::OP_8xy6 ,Chip8::OP_8xy7 ,Chip8::OP_8xyE];
-        let mut tableE = [Chip8::OP_ExA1, Chip8::OP_Ex9E];
-
-        let mut tableF: [for<'r> fn(&'r mut Chip8); _] = [];
-        tableF[0x07] = &Chip8::OP_Fx07;
-        tableF[0x0A] = Chip8::OP_Fx0A;
-        tableF[0x15] = Chip8::OP_Fx15;
-        tableF[0x18] = Chip8::OP_Fx18;
-        tableF[0x1E] = Chip8::OP_Fx1E;
-        tableF[0x29] = Chip8::OP_Fx07;
-        tableF[0x33] = Chip8::OP_Fx07;
-        tableF[0x55] = Chip8::OP_Fx07;
-        tableF[0x65] = Chip8::OP_Fx07;
-        
-
-
-        let mut chip8 = Chip8 {
+        let mut chip8: Chip8 = Chip8 {
             registers: [0; 16],
             memory: [0; 4096],
             index_register: 0,
@@ -80,11 +69,21 @@ impl Chip8 {
             keypad: [0; 16],
             video: [0; 2048],
             op_code: 0,
+            table: [|_| println!("x"); 16],
         };
 
         chip8.load_fonts();
+        chip8.add_table();
+
 
         return chip8;
+    }
+
+    pub fn add_table(&mut self) {
+        let mut table: [fn(&mut Chip8); 16] = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
+        //println!("{}", table.len());
+
+        self.table = table;
     }
 
     pub fn add_function_pointer_table(&mut self) {
@@ -613,15 +612,11 @@ impl Chip8 {
 
     /// OPCODE to do nothing
     fn Table0(&mut self) {
-        //self.tables.table0[(self.op_code & 0x000F) as usize]();
-        fn hello() {
-            println!("hello");
-        }
 
-        let test = hello();
+        println!("TABLE0 EXECUTED");
     }
 
-    /*fn Table8(&mut self) {
+    fn Table8(&mut self) {
 
     }
 
@@ -632,14 +627,14 @@ impl Chip8 {
     fn TableF(&mut self) {
 
     }
-    */
+    
 
     // the opcodes are stored in memory starting from index 512, i need to decode them and map each opcode to one of my functions
     // The CHIP-8 Architecture uses big-endian (0x00 0xe0 -> 0x00e0)
 
     fn Cycle(&mut self) {
         // Fetch opcode
-        let opcode = (self.memory[self.program_counter as usize] << 8 | self.memory[(self.program_counter + 1) as usize]);
+        let opcode = self.memory[self.program_counter as usize] << 8 | self.memory[(self.program_counter + 1) as usize];
 
         // increment pc before we do anything
         self.program_counter += 2;
