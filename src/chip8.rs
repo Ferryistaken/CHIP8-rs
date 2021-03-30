@@ -19,11 +19,11 @@ pub struct Chip8 {
     keypad: [u8; 16],
     video: [u32; 64 * 32],
     op_code: u16,
-    table: [fn(&mut Chip8); 16],
-    table0: [fn(&mut Chip8); 15],
-    table8: [fn(&mut Chip8); 15],
-    tableE: [fn(&mut Chip8); 15],
-    tableF: [fn(&mut Chip8); 101],
+    table: [fn(&mut Chip8); 0xF+1],
+    table0: [fn(&mut Chip8); 0xE+1],
+    table8: [fn(&mut Chip8); 0xE+1],
+    tableE: [fn(&mut Chip8); 0xE+1],
+    tableF: [fn(&mut Chip8); 0x65+1],
 }
 /*
     table: [for<'r> fn(&'r mut Chip8); 16],
@@ -69,11 +69,11 @@ impl Chip8 {
             keypad: [0; 16],
             video: [0; 2048],
             op_code: 0,
-            table: [Chip8::OP_ERR; 16],
-            table0: [Chip8::OP_ERR; 15],
-            table8: [Chip8::OP_ERR; 15],
-            tableE: [Chip8::OP_ERR; 15],
-            tableF: [Chip8::OP_ERR; 101]
+            table: [Chip8::OP_ERR; 0xF+1],
+            table0: [Chip8::OP_ERR; 0xE+1],
+            table8: [Chip8::OP_ERR; 0xE+1],
+            tableE: [Chip8::OP_ERR; 0xE+1],
+            tableF: [Chip8::OP_ERR; 0x65+1]
         };
 
         chip8.load_fonts();
@@ -86,7 +86,7 @@ impl Chip8 {
     /// Add the correct function pointer tables to the newly created Chip8 object
     pub fn add_table(&mut self) {
         let mut table: [fn(&mut Chip8); 0xF+1] = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
-        // I make "default" values this closure here so that when I find a better way to do it I only change it here
+        // TODO: filling them with OP_ERR is redundant as I already do so when creating the array in the constructor
         let mut table0: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];
         let mut table8: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];
         let mut tableE: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];
@@ -122,10 +122,8 @@ impl Chip8 {
         // Apply the newly generated tables
         self.table = table;
         self.table0 = table0;
-        /*
         self.table8 = table8;
         self.tableE = tableE;
-        */
     }
 
     pub fn add_function_pointer_table(&mut self) {
