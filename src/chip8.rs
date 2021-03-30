@@ -641,7 +641,7 @@ impl Chip8 {
 
         // decode and execute
         // TODO: actually implement this
-        //self.tab
+        self.table[((self.op_code & 0xF000) >> 12) as usize](self);
 
     }
 
