@@ -6,6 +6,12 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
+extern crate sdl2;
+use sdl2::pixels::Color;
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use std::time::Duration;
+
 
 /// General chip 8 struct
 pub struct Chip8 {
@@ -165,14 +171,7 @@ impl Chip8 {
 
     pub fn dump_video(&mut self) -> Vec<u32> {
         let mut buf: Vec<u32> = Vec::new();
-        /*
-        for (_i, row) in self.video.iter_mut().enumerate() {
-            for (_y, col) in row.iter_mut().enumerate() {
-                println!("{}", col);
-                buf.push(col);
-            }
-        }
-        */
+
         for i in 0..self.video.len() {
             buf.push(self.video[i]);
         }
