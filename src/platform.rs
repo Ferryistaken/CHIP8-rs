@@ -32,5 +32,6 @@ impl Platform {
             .unwrap();
 
             let mut canvas = window.into_canvas().build().unwrap();
+            
     }
 }
