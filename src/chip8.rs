@@ -62,7 +62,7 @@ impl Chip8 {
         // TODO: This might not work, will probably need a switch statement
         // https://stackoverflow.com/questions/24728394/is-there-a-way-to-create-a-function-pointer-to-a-method-in-rust
 
-        
+
         let mut chip8: Chip8 = Chip8 {
             registers: [0; 16],
             memory: [0; 4096],
@@ -664,14 +664,14 @@ impl Chip8 {
     fn TableF(&mut self) {
         self.tableF[(self.op_code & 0x00FF) as usize](self);
     }
-    
+
 
     // the opcodes are stored in memory starting from index 512, i need to decode them and map each opcode to one of my functions
     // The CHIP-8 Architecture uses big-endian (0x00 0xe0 -> 0x00e0)
 
-    fn Cycle(&mut self) {
+    pub fn Cycle(&mut self) {
         // Fetch opcode
-        let opcode = self.memory[self.program_counter as usize] << 8 | self.memory[(self.program_counter + 1) as usize];
+        self.op_code = ((self.memory[self.program_counter as usize].checked_shl(8).unwrap_or(0)) | self.memory[(self.program_counter + 1) as usize]) as u16;
 
         // increment pc before we do anything
         self.program_counter += 2;

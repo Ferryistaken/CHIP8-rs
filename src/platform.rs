@@ -16,13 +16,13 @@ impl Platform {
         let number = 8;
         let sdl_context = sdl2::init();
         let sdl_context = match sdl_context {
-            Ok(Sdl) => Sdl,
+            Ok(sdl) => sdl,
             Err(e) => panic!("Error initializing Sdl for rendering. Error message: {}", e),
         };
 
         let video_subsystem = sdl_context.video();
         let video_subsystem = match video_subsystem {
-            Ok(VideoSubsystem) => VideoSubsystem,
+            Ok(video_subsystem) => video_subsystem,
             Err(e) => panic!("Error initializing Sdl video subsystem. Error message: {}", e),
         };
 
@@ -32,6 +32,5 @@ impl Platform {
             .unwrap();
 
             let mut canvas = window.into_canvas().build().unwrap();
-            
     }
 }
