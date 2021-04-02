@@ -16,7 +16,8 @@ use std::time::Duration;
 
 /// General chip 8 struct
 pub struct Chip8 {
-    registers: [u8; 16], memory: [u8; 4096],
+    registers: [u8; 16], 
+    memory: [u8; 4096],
     index_register: u16,
     program_counter: u16,
     stack: [u16; 16],
@@ -32,13 +33,8 @@ pub struct Chip8 {
     tableE: [fn(&mut Chip8); 0xE+1],
     tableF: [fn(&mut Chip8); 0x65+1],
 }
-/*
-    table: [for<'r> fn(&'r mut Chip8); 16],
-    table0: [for<'r> fn(&'r mut Chip8); 2],
-    table8: [for<'r> fn(&'r mut Chip8); 9],
-    tableE: [for<'r> fn(&'r mut Chip8); 2],
-    tableF: [for<'r> fn(&'r mut Chip8); 9],
-*/
+
+
 impl Chip8 {
     /// Create a new chip8 instance with an empty `rom`, ready for use
     ///
@@ -494,8 +490,7 @@ impl Chip8 {
             for col in 0..(height - 1) {
                 let sprite_pixel = sprite_byte & ((0x80 as u8).checked_shr(col as u32).unwrap_or(0));
                 // casting without error checking here is fine because col and raw wil alwyays be lower than 255(they are 64 and 32)
-                let mut screen_pixel =
-                    self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col as u8)) as usize];
+                let mut screen_pixel = self.video[(((y_pos as u16 + row) * (VIDEO_WIDTH as u16) + (x_pos as u16) + col)) as usize];
 
                 // sprite pixel is on
                 if sprite_pixel != 0 {
@@ -673,7 +668,9 @@ impl Chip8 {
 
     pub fn Cycle(&mut self) {
         // Fetch opcode
-        self.op_code = ((self.memory[self.program_counter as usize].checked_shl(8).unwrap_or(0)) | self.memory[(self.program_counter + 1) as usize]) as u16;
+        //let _: () = self.memory[self.program_counter as usize].checked_shl(8).unwrap_or(0);
+        self.op_code = (((self.memory[self.program_counter as usize] as u16).checked_shl(8).unwrap_or(0)) | self.memory[(self.program_counter + 1) as usize] as u16);
+        eprintln!("{}", &self.op_code);
 
         // increment pc before we do anything
         self.program_counter += 2;

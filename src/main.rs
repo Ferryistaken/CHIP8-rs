@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 mod chip8;
 use chip8::Chip8;
+use std::{thread, time};
+
 
 mod platform;
 
@@ -22,6 +24,10 @@ fn main() {
     loop {
         chip8.Cycle();
         println!("{:?}", chip8.dump_video());
+        let ten_millis = time::Duration::from_millis(200);
+        let now = time::Instant::now();
+
+        thread::sleep(ten_millis);
     }
 
 }
