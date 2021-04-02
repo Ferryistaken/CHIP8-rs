@@ -5,6 +5,7 @@ use std::convert::TryFrom;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use std::ops::ShrAssign;
 
 extern crate sdl2;
 use sdl2::pixels::Color;
@@ -255,7 +256,7 @@ impl Chip8 {
     /// OPCODE 3XKK - Skip next instruction if Vx = kk
     /// Since our PC has already been incremented by 2 in Cycle(), we can just increment by 2 again to skip the next instruction.
     fn OP_3xkk(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
 
         let byte: u8 = match u8::try_from(byte) {
@@ -273,7 +274,7 @@ impl Chip8 {
 
     /// OPCODE 4XKK - Skip next instruction if Vx != kk
     fn OP_4xkk(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
 
         let byte: u8 = match u8::try_from(byte) {
@@ -292,8 +293,8 @@ impl Chip8 {
 
     /// OPCODE 5XY0 - Skip next instruction if Vx = Vy.
     fn OP_5xy0(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         if self.registers[Vx as usize] == self.registers[Vy as usize] {
             self.program_counter += 2;
@@ -302,7 +303,7 @@ impl Chip8 {
 
     /// OPCODE 6XKK - Set Vx = kk.
     fn OP_6xkk(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
 
         let byte: u8 = match u8::try_from(byte) {
@@ -314,11 +315,12 @@ impl Chip8 {
         };
 
         self.registers[Vx as usize] = byte;
+        
     }
 
     /// OPCODE 7XKK - Set Vx = Vx + kk.
     fn OP_7xkk(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
 
         let byte: u8 = match u8::try_from(byte) {
@@ -334,32 +336,32 @@ impl Chip8 {
 
     /// OPCODE 8XY0 - Set Vx = Vy.
     fn OP_8xy0(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         self.registers[Vx as usize] = self.registers[Vy as usize];
     }
 
     /// OPCODE 8XY1 - Set Vx = Vx OR Vy.
     fn OP_8xy1(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         self.registers[Vx as usize] |= self.registers[Vy as usize];
     }
 
     /// OPCODE 8XY2 - Set Vx = Vx AND Vy
     fn OP_8xy2(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         self.registers[Vx as usize] &= self.registers[Vy as usize];
     }
 
     /// OPCODE 8XY3 - Set Vx = Vx XOR Vy
     fn OP_8xy3(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         self.registers[Vx as usize] ^= self.registers[Vy as usize];
     }
@@ -367,8 +369,8 @@ impl Chip8 {
     /// OPCODE 8XY4 - Set Vx = Vx + Vy, set VF = carry.
     /// The values of Vx and Vy are added together. If the result is greater than 8 bits (i.e., > 255,) VF is set to 1, otherwise 0. Only the lowest 8 bits of the result are kept, and stored in Vx.
     fn OP_8xy4(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         let sum: u16 = (self.registers[Vx as usize] + self.registers[Vy as usize]) as u16;
 
@@ -384,8 +386,8 @@ impl Chip8 {
     /// OPCODE 8XY5 - Set Vx = Vx - Vy, set VF = NOT borrow.
     /// If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
     fn OP_8xy5(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         if self.registers[Vx as usize] > self.registers[Vy as usize] {
             self.registers[0xF] = 1;
@@ -399,19 +401,19 @@ impl Chip8 {
     /// OPCODE 8XY6 - Set Vx = Vx SHR 1.
     /// If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
     fn OP_8xy6(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         // Save LSB in VF
         self.registers[0xF] = self.registers[Vx as usize] & 0x1;
 
-        self.registers[Vx as usize] >>= 1;
+            self.registers[Vx as usize].shr_assign(1);
     }
 
     /// OPCODE 8XY7 - SUBN Vx, Vy
     /// If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
     fn OP_8xy7(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         if self.registers[Vy as usize] > self.registers[Vx as usize] {
             self.registers[0xF] = 1;
@@ -425,18 +427,18 @@ impl Chip8 {
     /// OPCODE 8XYE - Set Vx = Vx SHL 1.
     /// If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
     fn OP_8xyE(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         // save MSB in VF
-        self.registers[0xF] = (self.registers[Vx as usize] & 0x80) >> 7;
+        self.registers[0xF] = (self.registers[Vx as usize] & 0x80).checked_shr(7).unwrap_or(0);
 
-        self.registers[Vx as usize] <<= 1;
+        self.registers[Vx as usize].checked_shl(1).unwrap_or(0);
     }
 
     /// OPCODE 9XY0 - Skip next instruction if Vx != Vy
     fn OP_9xy0(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         if self.registers[Vx as usize] != self.registers[Vy as usize] {
             self.program_counter += 2;
@@ -459,7 +461,7 @@ impl Chip8 {
 
     /// OPCODE CXKK - Set Vx = random byte AND kk.
     fn OP_Cxkk(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
 
         let byte: u8 = match u8::try_from(byte) {
@@ -475,8 +477,8 @@ impl Chip8 {
 
     /// OPCODE DXYN - Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
     fn OP_Dxyn(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
-        let Vy: u16 = (self.op_code & 0x00F0) >> 4;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
         let height: u16 = self.op_code & 0x000F;
         let VIDEO_WIDTH: u8 = 64;
         let VIDEO_HEIGHT: u8 = 32;
@@ -490,7 +492,7 @@ impl Chip8 {
             let sprite_byte: u8 = self.memory[(self.index_register + row) as usize];
 
             for col in 0..(height - 1) {
-                let sprite_pixel = sprite_byte & (0x80 >> col);
+                let sprite_pixel = sprite_byte & ((0x80 as u8).checked_shr(col as u32).unwrap_or(0));
                 // casting without error checking here is fine because col and raw wil alwyays be lower than 255(they are 64 and 32)
                 let mut screen_pixel =
                     self.video[((y_pos + row as u8) * VIDEO_WIDTH + (x_pos + col as u8)) as usize];
@@ -511,7 +513,7 @@ impl Chip8 {
 
     /// OPCODE EX9E - Skip next instruction if key with the value of Vx is pressed.
     fn OP_Ex9E(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let key: u8 = self.registers[Vx as usize];
 
         if self.keypad[key as usize] != 0 {
@@ -521,7 +523,7 @@ impl Chip8 {
 
     /// OPCODE EXA1 - Skip next instruction if key with the value of Vx is not pressed
     fn OP_ExA1(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let key: u8 = self.registers[Vx as usize];
 
         if self.keypad[key as usize] == 0 {
@@ -531,14 +533,14 @@ impl Chip8 {
 
     /// OPCODE FX07 - Set Vx = delay timer value
     fn OP_Fx07(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         self.registers[Vx as usize] = self.delay_timer;
     }
 
     /// OPCODE FX0A - Wait for a key press, store the value of the key in Vx.
     fn OP_Fx0A(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         if self.keypad[0] != 0 {
             self.registers[Vx as usize] = 0;
@@ -579,28 +581,28 @@ impl Chip8 {
 
     /// OPCODE FX15 - Set delay timer = Vx.
     fn OP_Fx15(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         self.delay_timer = self.registers[Vx as usize];
     }
 
     /// OPCODE FX18 - Set sound timer = Vx.
     fn OP_Fx18(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         self.sound_timer = self.registers[Vx as usize];
     }
 
     /// OPCODE FX1E - Set I = I + Vx.
     fn OP_Fx1E(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         self.index_register += self.registers[Vx as usize] as u16;
     }
 
     /// OPCODE FX29 - Set I = location of sprite for digit Vx.
     fn OP_Fx29(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let digit = self.registers[Vx as usize];
         let fontset_start_address = 0x50;
 
@@ -610,7 +612,7 @@ impl Chip8 {
     /// OPCODE FX33 - Store BCD representation of Vx in memory locations I, I+1, and I+2.
     /// The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
     fn OP_Fx33(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let mut value: u8 = self.registers[Vx as usize];
 
         // ones place
@@ -627,7 +629,7 @@ impl Chip8 {
 
     /// OPCODE FX55 -- Store registers V0 to VX in memory starting at location X
     fn OP_Fx55(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         for i in 0..(Vx - 1) {
             self.memory[(self.index_register + i) as usize] = self.registers[i as usize];
@@ -636,7 +638,7 @@ impl Chip8 {
 
     /// OPCODE FX65 - Read registers V0 through Vx from memory starting at location I.
     fn OP_Fx65(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00) >> 8;
+        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         for i in 0..(Vx - 1) {
             self.registers[i as usize] = self.memory[(self.index_register + i) as usize];
@@ -678,7 +680,7 @@ impl Chip8 {
 
         // decode and execute
         // TODO: actually implement this
-        self.table[((self.op_code & 0xF000) >> 12) as usize](self);
+        self.table[((self.op_code & 0xF000).checked_shr(12).unwrap_or(0)) as usize](self);
 
         // Decrement delay timer if it exists
         if (self.delay_timer > 0) {
