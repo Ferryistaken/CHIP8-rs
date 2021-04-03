@@ -1,0 +1,58 @@
+Debug mode activated
+Loading ROM: "roms/IBM-Logo.ch8"
+ROM Loaded
+Opcode: 224
+Ran opcode: OP_00E0
+Ran opcode: Table0
+Opcode: 41514
+Ran opcode: OP_Annn
+Opcode: 24588
+Ran opcode: OP_6xkk
+Opcode: 24840
+Ran opcode: OP_6xkk
+Opcode: 53279
+Ran opcode: OP_Dxyn
+Opcode: 28681
+Ran opcode: OP_7xkk
+Opcode: 41529
+Ran opcode: OP_Annn
+Opcode: 53279
+Ran opcode: OP_Dxyn
+Opcode: 41544
+Ran opcode: OP_Annn
+Opcode: 28680
+Ran opcode: OP_7xkk
+Opcode: 53279
+Ran opcode: OP_Dxyn
+Opcode: 28676
+Ran opcode: OP_7xkk
+Opcode: 41559
+Ran opcode: OP_Annn
+Opcode: 53279
+Ran opcode: OP_Dxyn
+Opcode: 28680
+Ran opcode: OP_7xkk
+Opcode: 41574
+Ran opcode: OP_Annn
+Opcode: 53279
+Ran opcode: OP_Dxyn
+Opcode: 28680
+Ran opcode: OP_7xkk
+Opcode: 41589
+Ran opcode: OP_Annn
+Opcode: 53279
+Ran opcode: OP_Dxyn
+Opcode: 4648
+Ran opcode: OP_1nnn
+Opcode: 4648
+Ran opcode: OP_1nnn
+Opcode: 4648
+Ran opcode: OP_1nnn
+Opcode: 4648
+Ran opcode: OP_1nnn
+Opcode: 4648
+Ran opcode: OP_1nnn
+Opcode: 4648
+Ran opcode: OP_1nnn
+Opcode: 4648
+Ran opcode: OP_1nnn

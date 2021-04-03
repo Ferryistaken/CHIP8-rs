@@ -13,7 +13,8 @@
 
 ## Description
 
-This is a simple chip 8 emulator written in rust, mainly developed for learning.
+This is a simple chip 8 emulator written in rust, mainly developed for learning.  
+The goal of this emulator isn't to write a very efficient and memory safe one, [we already have those](https://github.com/jellysquid3/chip8-rs), what I am trying to do is writing an emulator which is easy to understand, so that even an unexperienced coder can understand what's going on.
 
 ## Getting Started
 `This program was tested in linux only, but should work in windows just fine`
