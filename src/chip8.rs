@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::ops::ShrAssign;
+use function_name::named;
 
 extern crate sdl2;
 use sdl2::pixels::Color;
@@ -32,6 +33,7 @@ pub struct Chip8 {
     table8: [fn(&mut Chip8); 0xE+1],
     tableE: [fn(&mut Chip8); 0xE+1],
     tableF: [fn(&mut Chip8); 0x65+1],
+    debug_mode: bool,
 }
 
 
@@ -76,7 +78,8 @@ impl Chip8 {
             table0: [Chip8::OP_ERR; 0xE+1],
             table8: [Chip8::OP_ERR; 0xE+1],
             tableE: [Chip8::OP_ERR; 0xE+1],
-            tableF: [Chip8::OP_ERR; 0x65+1]
+            tableF: [Chip8::OP_ERR; 0x65+1],
+            debug_mode: false,
         };
 
         chip8.load_fonts();
@@ -88,6 +91,9 @@ impl Chip8 {
 
     /// Add the correct function pointer tables to the newly created Chip8 object
     pub fn add_table(&mut self) {
+        if (self.debug_mode) {
+            eprintln!("Loading tables");
+        }
         let mut table: [fn(&mut Chip8); 0xF+1] = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
         // TODO: filling them with OP_ERR is redundant as I already do so when creating the array in the constructor
         let mut table0: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];
@@ -127,10 +133,24 @@ impl Chip8 {
         self.table0 = table0;
         self.table8 = table8;
         self.tableE = tableE;
+
+        if (self.debug_mode) {
+            eprintln!("Tables loaded");
+        }
+    }
+
+    /// Toggle debug mode for current chip8 instance
+    pub fn debug(&mut self) {
+        // bitwise xor
+        self.debug_mode ^= true;
+        eprintln!("Debug mode activated");
     }
 
     /// Loads a given rom into memory, starting from memory address 0x200
     pub fn load_rom(&mut self, path: PathBuf) {
+        if (self.debug_mode) {
+            eprintln!("Loading ROM: {:?}", &path);
+        }
         // memory addres before this are reserved
         let start_address = 0x200;
 
@@ -153,6 +173,10 @@ impl Chip8 {
         // load the buffer into the chip 8 memory
         for i in 0..buf.len() - 1 {
             self.memory[start_address + i] = buf[i];
+        }
+
+        if (self.debug_mode) {
+            eprintln!("ROM Loaded");
         }
     }
 
@@ -198,8 +222,16 @@ impl Chip8 {
 
         let fontset_start_address = 0x50;
 
+        if (self.debug_mode) {
+            eprintln!("Loading fontset");
+        }
+
         for i in 0..fontset.len() - 1 {
             self.memory[fontset_start_address + i as usize] = fontset[i as usize];
+        }
+
+        if (self.debug_mode) {
+            eprintln!("Fontset loaded");
         }
     }
 
@@ -218,39 +250,56 @@ impl Chip8 {
     //
 
     /// OPCODE 00E0 - Clear Screen
+    #[named]
     pub fn OP_00E0(&mut self) {
         // set video buffer to zero
         self.video = [0; 2048];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 00EE - Return from subroutine
+    #[named]
     fn OP_00EE(&mut self) {
         self.stack_pointer = self.stack_pointer - 1;
 
         self.program_counter = self.stack[self.stack_pointer as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 1NNN - Jump to location NNN(set program counter to nnn)
+    #[named]
     fn OP_1nnn(&mut self) {
         // using 0x0FFF I can take the NNN from the opcode while leaving the one
         let address: u16 = self.op_code & 0x0FFF;
 
         self.program_counter = address;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 2NNN - Call subroutine at location NNN
+    #[named]
     fn OP_2nnn(&mut self) {
         let address: u16 = self.op_code & 0x0FFF;
 
         self.stack[self.stack_pointer as usize] = self.program_counter;
         self.stack_pointer = self.stack_pointer + 1;
         self.program_counter = address;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     // TODO: Make all of these `Vx` Variables `u8`(or maybe even usize) instead of `u16`
 
     /// OPCODE 3XKK - Skip next instruction if Vx = kk
     /// Since our PC has already been incremented by 2 in Cycle(), we can just increment by 2 again to skip the next instruction.
+    #[named]
     fn OP_3xkk(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
@@ -266,9 +315,13 @@ impl Chip8 {
         if self.registers[Vx as usize] == byte {
             self.program_counter += 2;
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 4XKK - Skip next instruction if Vx != kk
+    #[named]
     fn OP_4xkk(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
@@ -285,9 +338,13 @@ impl Chip8 {
         if self.registers[Vx as usize] != byte {
             self.program_counter += 2;
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 5XY0 - Skip next instruction if Vx = Vy.
+    #[named]
     fn OP_5xy0(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
@@ -295,9 +352,13 @@ impl Chip8 {
         if self.registers[Vx as usize] == self.registers[Vy as usize] {
             self.program_counter += 2;
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 6XKK - Set Vx = kk.
+    #[named]
     fn OP_6xkk(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
@@ -311,10 +372,14 @@ impl Chip8 {
         };
 
         self.registers[Vx as usize] = byte;
-        
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
+
     }
 
     /// OPCODE 7XKK - Set Vx = Vx + kk.
+    #[named]
     fn OP_7xkk(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
@@ -328,42 +393,62 @@ impl Chip8 {
         };
 
         self.registers[Vx as usize] += byte;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XY0 - Set Vx = Vy.
+    #[named]
     fn OP_8xy0(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         self.registers[Vx as usize] = self.registers[Vy as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XY1 - Set Vx = Vx OR Vy.
+    #[named]
     fn OP_8xy1(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         self.registers[Vx as usize] |= self.registers[Vy as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XY2 - Set Vx = Vx AND Vy
+    #[named]
     fn OP_8xy2(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         self.registers[Vx as usize] &= self.registers[Vy as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XY3 - Set Vx = Vx XOR Vy
+    #[named]
     fn OP_8xy3(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
         self.registers[Vx as usize] ^= self.registers[Vy as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XY4 - Set Vx = Vx + Vy, set VF = carry.
     /// The values of Vx and Vy are added together. If the result is greater than 8 bits (i.e., > 255,) VF is set to 1, otherwise 0. Only the lowest 8 bits of the result are kept, and stored in Vx.
+    #[named]
     fn OP_8xy4(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
@@ -377,10 +462,14 @@ impl Chip8 {
         }
 
         self.registers[Vx as usize] = (sum & 0xFF) as u8;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XY5 - Set Vx = Vx - Vy, set VF = NOT borrow.
     /// If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
+    #[named]
     fn OP_8xy5(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
@@ -392,21 +481,29 @@ impl Chip8 {
         }
 
         self.registers[Vx as usize] -= self.registers[Vy as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XY6 - Set Vx = Vx SHR 1.
     /// If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
+    #[named]
     fn OP_8xy6(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         // Save LSB in VF
         self.registers[0xF] = self.registers[Vx as usize] & 0x1;
 
-            self.registers[Vx as usize].shr_assign(1);
+        self.registers[Vx as usize].shr_assign(1);
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XY7 - SUBN Vx, Vy
     /// If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+    #[named]
     fn OP_8xy7(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
@@ -418,10 +515,14 @@ impl Chip8 {
         }
 
         self.registers[Vx as usize] = self.registers[Vy as usize] - self.registers[Vx as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 8XYE - Set Vx = Vx SHL 1.
     /// If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
+    #[named]
     fn OP_8xyE(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
@@ -429,9 +530,13 @@ impl Chip8 {
         self.registers[0xF] = (self.registers[Vx as usize] & 0x80).checked_shr(7).unwrap_or(0);
 
         self.registers[Vx as usize].checked_shl(1).unwrap_or(0);
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE 9XY0 - Skip next instruction if Vx != Vy
+    #[named]
     fn OP_9xy0(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
@@ -439,23 +544,35 @@ impl Chip8 {
         if self.registers[Vx as usize] != self.registers[Vy as usize] {
             self.program_counter += 2;
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE ANNN - set I = nnn
+    #[named]
     fn OP_Annn(&mut self) {
         let address: u16 = self.op_code & 0x0FFF;
 
         self.index_register = address;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE BNNN - Jump to location nnn + V0
+    #[named]
     fn OP_Bnnn(&mut self) {
         let address: u16 = self.op_code & 0x0FFF;
 
         self.program_counter = self.registers[0] as u16 + address;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE CXKK - Set Vx = random byte AND kk.
+    #[named]
     fn OP_Cxkk(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u16 = self.op_code & 0x00FF;
@@ -469,16 +586,21 @@ impl Chip8 {
         };
 
         self.registers[Vx as usize] = self.rand_byte() & byte;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE DXYN - Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+    #[named]
     fn OP_Dxyn(&mut self) {
-        let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
-        let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
-        let height: u16 = self.op_code & 0x000F;
+        let Vx = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
+        let Vy = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
+        let height = self.op_code & 0x000F;
         let VIDEO_WIDTH: u8 = 64;
         let VIDEO_HEIGHT: u8 = 32;
 
+        // wrap if going over boundaries
         let x_pos: u8 = self.registers[Vx as usize] % VIDEO_WIDTH;
         let y_pos: u8 = self.registers[Vy as usize] % VIDEO_HEIGHT;
 
@@ -504,9 +626,13 @@ impl Chip8 {
                 }
             }
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE EX9E - Skip next instruction if key with the value of Vx is pressed.
+    #[named]
     fn OP_Ex9E(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let key: u8 = self.registers[Vx as usize];
@@ -514,9 +640,13 @@ impl Chip8 {
         if self.keypad[key as usize] != 0 {
             self.program_counter += 2;
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE EXA1 - Skip next instruction if key with the value of Vx is not pressed
+    #[named]
     fn OP_ExA1(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let key: u8 = self.registers[Vx as usize];
@@ -524,16 +654,24 @@ impl Chip8 {
         if self.keypad[key as usize] == 0 {
             self.program_counter += 2;
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX07 - Set Vx = delay timer value
+    #[named]
     fn OP_Fx07(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         self.registers[Vx as usize] = self.delay_timer;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX0A - Wait for a key press, store the value of the key in Vx.
+    #[named]
     fn OP_Fx0A(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
@@ -572,40 +710,60 @@ impl Chip8 {
         } else {
             self.program_counter -= 2;
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX15 - Set delay timer = Vx.
+    #[named]
     fn OP_Fx15(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         self.delay_timer = self.registers[Vx as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX18 - Set sound timer = Vx.
+    #[named]
     fn OP_Fx18(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         self.sound_timer = self.registers[Vx as usize];
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX1E - Set I = I + Vx.
+    #[named]
     fn OP_Fx1E(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         self.index_register += self.registers[Vx as usize] as u16;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX29 - Set I = location of sprite for digit Vx.
+    #[named]
     fn OP_Fx29(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let digit = self.registers[Vx as usize];
         let fontset_start_address = 0x50;
 
         self.index_register = (fontset_start_address + (5*digit)) as u16;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX33 - Store BCD representation of Vx in memory locations I, I+1, and I+2.
     /// The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
+    #[named]
     fn OP_Fx33(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let mut value: u8 = self.registers[Vx as usize];
@@ -620,46 +778,77 @@ impl Chip8 {
 
         // hundreds place
         self.memory[self.index_register as usize] = value % 10;
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX55 -- Store registers V0 to VX in memory starting at location X
+    #[named]
     fn OP_Fx55(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         for i in 0..(Vx - 1) {
             self.memory[(self.index_register + i) as usize] = self.registers[i as usize];
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// OPCODE FX65 - Read registers V0 through Vx from memory starting at location I.
+    #[named]
     fn OP_Fx65(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
         for i in 0..(Vx - 1) {
             self.registers[i as usize] = self.memory[(self.index_register + i) as usize];
         }
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
     /// Fallback OPCODE
+    #[named]
     fn OP_ERR(&mut self) {
-       eprintln!("[ERROR]: Opcode {} not valid", self.op_code); 
+        eprintln!("[ERROR]: Opcode {} not valid", self.op_code); 
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
-    
 
+
+    #[named]
     fn Table0(&mut self) {
         self.table0[(self.op_code & 0x000F) as usize](self);
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
+    #[named]
     fn Table8(&mut self) {
         self.table8[(self.op_code & 0x000F) as usize](self);
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
+    #[named]
     fn TableE(&mut self) {
         self.tableE[(self.op_code & 0x000F) as usize](self);
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
+    #[named]
     fn TableF(&mut self) {
         self.tableF[(self.op_code & 0x00FF) as usize](self);
+        if self.debug_mode {
+            eprintln!("Ran opcode: {}", function_name!());
+        }
     }
 
 
@@ -669,8 +858,8 @@ impl Chip8 {
     pub fn Cycle(&mut self) {
         // Fetch opcode
         //let _: () = self.memory[self.program_counter as usize].checked_shl(8).unwrap_or(0);
-        self.op_code = (((self.memory[self.program_counter as usize] as u16).checked_shl(8).unwrap_or(0)) | self.memory[(self.program_counter + 1) as usize] as u16);
-        eprintln!("{}", &self.op_code);
+        self.op_code = ((self.memory[self.program_counter as usize] as u16).checked_shl(8).unwrap_or(0)) | self.memory[(self.program_counter + 1) as usize] as u16;
+        println!("Opcode: {}", &self.op_code);
 
         // increment pc before we do anything
         self.program_counter += 2;

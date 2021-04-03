@@ -9,6 +9,7 @@ mod platform;
 
 fn main() {
     let mut chip8: Chip8 = Chip8::new();
+    chip8.debug();
 
     // TODO: make it so that the file is taken as a positional argument
     chip8.load_rom(PathBuf::from(
@@ -23,7 +24,6 @@ fn main() {
 
     loop {
         chip8.Cycle();
-        println!("{:?}", chip8.dump_video());
         let ten_millis = time::Duration::from_millis(200);
         let now = time::Instant::now();
 
