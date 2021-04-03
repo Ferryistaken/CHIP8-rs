@@ -9,6 +9,7 @@
 
 <p align="center">
   <img width="460" height="300" src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/chip8.jpg?raw=true">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/rust-ss.svg?raw=true">
 </p>
 
 ## Description

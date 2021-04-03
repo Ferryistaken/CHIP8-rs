@@ -16,17 +16,9 @@ fn main() {
         "roms/IBM-Logo.ch8",
     ));
 
-    /*
-    println!("Program loaded, dumping rom");
-    let _rom8: Vec<u8> = chip8.dump_rom(0x50, 80);
-    let _rom9: Vec<u8> = chip9.dump_rom(0x50, 80);
-    */
-
     loop {
         chip8.Cycle();
         let ten_millis = time::Duration::from_millis(200);
-        let now = time::Instant::now();
-
         thread::sleep(ten_millis);
     }
 
