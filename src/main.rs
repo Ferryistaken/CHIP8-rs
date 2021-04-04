@@ -18,6 +18,7 @@ fn main() {
 
     loop {
         chip8.Cycle();
+        eprintln!("{:?}",chip8.dump_video());
         let ten_millis = time::Duration::from_millis(200);
         thread::sleep(ten_millis);
     }

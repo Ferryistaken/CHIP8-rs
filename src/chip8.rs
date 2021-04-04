@@ -821,34 +821,34 @@ impl Chip8 {
 
     #[named]
     fn Table0(&mut self) {
-        self.table0[(self.op_code & 0x000F) as usize](self);
         if self.debug_mode {
-            eprintln!("Ran table: {}", function_name!());
+            eprintln!("Running table: {}", function_name!());
         }
+        self.table0[(self.op_code & 0x000F) as usize](self);
     }
 
     #[named]
     fn Table8(&mut self) {
-        self.table8[(self.op_code & 0x000F) as usize](self);
         if self.debug_mode {
-            eprintln!("Ran table: {}", function_name!());
+            eprintln!("Running table: {}", function_name!());
         }
+        self.table8[(self.op_code & 0x000F) as usize](self);
     }
 
     #[named]
     fn TableE(&mut self) {
-        self.tableE[(self.op_code & 0x000F) as usize](self);
         if self.debug_mode {
-            eprintln!("Ran table: {}", function_name!());
+            eprintln!("Running table: {}", function_name!());
         }
+        self.tableE[(self.op_code & 0x000F) as usize](self);
     }
 
     #[named]
     fn TableF(&mut self) {
-        self.tableF[(self.op_code & 0x00FF) as usize](self);
         if self.debug_mode {
-            eprintln!("Ran table: {}", function_name!());
+            eprintln!("Running table: {}", function_name!());
         }
+        self.tableF[(self.op_code & 0x00FF) as usize](self);
     }
 
 
