@@ -9,11 +9,6 @@ use std::ops::ShrAssign;
 use function_name::named;
 
 extern crate sdl2;
-use sdl2::pixels::Color;
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use std::time::Duration;
-
 
 /// General chip 8 struct
 pub struct Chip8 {
@@ -55,12 +50,6 @@ impl Chip8 {
     /// * `op_code`: 0
     /// * `fontset_size`: 80
     pub fn new() -> Self {
-
-        // FIXME: make table0 and table8 functions actually do something
-        // FIXME: some indices might be wrong: they aren't in numerical order, some go from 0x6 to 0xE
-        // TODO: This might not work, will probably need a switch statement
-        // https://stackoverflow.com/questions/24728394/is-there-a-way-to-create-a-function-pointer-to-a-method-in-rust
-
 
         let mut chip8: Chip8 = Chip8 {
             registers: [0; 16],
