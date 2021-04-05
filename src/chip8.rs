@@ -158,7 +158,7 @@ impl Chip8 {
         // println!("{:x?}", buf);
 
         // load the buffer into the chip 8 memory
-        for i in 0..buf.len() - 1 {
+        for i in 0..buf.len() {
             self.memory[start_address + i] = buf[i];
         }
 
@@ -189,6 +189,7 @@ impl Chip8 {
     pub fn pretty_print_video(&mut self) {
         // █ &(0xFFFFFFFF as u32)
         //print!("\x1B[2J\x1B[1;1H");
+        print!("\x1B[2J\x1B[1;1H");
         let mut new_vec = self.video.into_iter().peekable();
         let mut rows: Vec<Vec<_>> = vec![];
         while new_vec.peek().is_some() {
@@ -208,7 +209,6 @@ impl Chip8 {
             }
             println!("{}", current_row);
         }
-        print!("\x1B[2J\x1B[1;1H")
     }
 
     /// Load the fontset into memory
@@ -238,7 +238,7 @@ impl Chip8 {
             eprintln!("Loading fontset");
         }
 
-        for i in 0..fontset.len() - 1 {
+        for i in 0..fontset.len() {
             self.memory[fontset_start_address + i as usize] = fontset[i as usize];
         }
 
@@ -394,17 +394,12 @@ impl Chip8 {
     #[named]
     fn OP_7xkk(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
-        let byte: u16 = self.op_code & 0x00FF;
+        let byte: u8 = (self.op_code as u8) & 0x00FF;
 
-        let byte: u8 = match u8::try_from(byte) {
-            Ok(number) => number,
-            Err(error) => panic!(
-                "Could not turn u16 into u8 in OPCODE 7XKK. Error: {}",
-                error
-            ),
-        };
+        eprintln!("Vx: {}, Byte: {}, Register: {}", &Vx, &byte, self.registers[Vx as usize]);
 
-        self.registers[Vx as usize] += byte;
+        self.registers[Vx as usize] = (((self.registers[Vx as usize] as u16) + byte as u16) % 256) as u8;
+        
         if self.debug_mode {
             eprintln!("Ran opcode: {}", function_name!());
         }
@@ -618,11 +613,11 @@ impl Chip8 {
 
         self.registers[0xF] = 0;
 
-        for row in 0..(height - 1) {
+        for row in 0..height {
             let sprite_byte: u8 = self.memory[(self.index_register + row) as usize];
 
-            for col in 0..7 {
-                let sprite_pixel = sprite_byte & ((0x80 as u8).checked_shr(col as u32).unwrap_or(0));
+            for col in 0..8 {
+                let sprite_pixel = sprite_byte & ((0x80 as u16).checked_shr(col as u32).unwrap_or(0) as u8);
                 // casting without error checking here is fine because col and raw wil alwyays be lower than 255(they are 64 and 32)
                 //let mut screen_pixel = self.video[(((y_pos as u16 + row) * (VIDEO_WIDTH as u16) + (x_pos as u16) + col)) as usize];
                 let video_index = ((y_pos as u16 + row) * (VIDEO_WIDTH as u16) + (x_pos as u16) + col) as usize;
@@ -801,7 +796,7 @@ impl Chip8 {
     fn OP_Fx55(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
-        for i in 0..(Vx - 1) {
+        for i in 0..Vx {
             self.memory[(self.index_register + i) as usize] = self.registers[i as usize];
         }
         if self.debug_mode {
@@ -814,7 +809,7 @@ impl Chip8 {
     fn OP_Fx65(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
-        for i in 0..(Vx - 1) {
+        for i in 0..Vx {
             self.registers[i as usize] = self.memory[(self.index_register + i) as usize];
         }
         if self.debug_mode {
