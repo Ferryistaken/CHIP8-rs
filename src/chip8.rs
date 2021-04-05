@@ -1,14 +1,12 @@
 #![allow(non_snake_case)]
 
 use rand::Rng;
-use std::convert::TryFrom;
+use std::{collections::vec_deque, convert::TryFrom};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::ops::ShrAssign;
 use function_name::named;
-
-extern crate sdl2;
 
 /// General chip 8 struct
 pub struct Chip8 {
@@ -21,7 +19,7 @@ pub struct Chip8 {
     delay_timer: u8,
     sound_timer: u8,
     keypad: [u8; 16],
-    video: [u32; 64 * 32],
+    pub video: [u32; 64 * 32],
     op_code: u16,
     table: [fn(&mut Chip8); 0xF+1],
     table0: [fn(&mut Chip8); 0xE+1],
@@ -186,6 +184,31 @@ impl Chip8 {
             buf.push(self.video[i]);
         }
         return buf;
+    }
+
+    pub fn pretty_print_video(&mut self) {
+        // █ &(0xFFFFFFFF as u32)
+        //print!("\x1B[2J\x1B[1;1H");
+        let mut new_vec = self.video.into_iter().peekable();
+        let mut rows: Vec<Vec<_>> = vec![];
+        while new_vec.peek().is_some() {
+            let chunk: Vec<_> = new_vec.by_ref().take(64).collect();
+            rows.push(chunk);
+        }
+
+        for row in rows {
+            let mut current_row = "".to_string();
+
+            for pixel in row {
+                if (pixel == &(0xFFFFFFFF as u32)) {
+                    current_row.push('█');
+                } else {
+                    current_row.push(' ');
+                }
+            }
+            println!("{}", current_row);
+        }
+        print!("\x1B[2J\x1B[1;1H")
     }
 
     /// Load the fontset into memory
@@ -598,20 +621,21 @@ impl Chip8 {
         for row in 0..(height - 1) {
             let sprite_byte: u8 = self.memory[(self.index_register + row) as usize];
 
-            for col in 0..(height - 1) {
+            for col in 0..7 {
                 let sprite_pixel = sprite_byte & ((0x80 as u8).checked_shr(col as u32).unwrap_or(0));
                 // casting without error checking here is fine because col and raw wil alwyays be lower than 255(they are 64 and 32)
-                let mut screen_pixel = self.video[(((y_pos as u16 + row) * (VIDEO_WIDTH as u16) + (x_pos as u16) + col)) as usize];
+                //let mut screen_pixel = self.video[(((y_pos as u16 + row) * (VIDEO_WIDTH as u16) + (x_pos as u16) + col)) as usize];
+                let video_index = ((y_pos as u16 + row) * (VIDEO_WIDTH as u16) + (x_pos as u16) + col) as usize;
 
                 // sprite pixel is on
                 if sprite_pixel != 0 {
                     // screen pixel also on - collision
-                    if screen_pixel == 0xFFFFFFFF {
+                    if self.video[video_index] == 0xFFFFFFFF {
                         self.registers[0xF] = 1;
                     }
 
                     // Effectively XOR with the sprite pixel
-                    screen_pixel ^= 0xFFFFFFFF;
+                    self.video[video_index] ^= 0xFFFFFFFF;
                 }
             }
         }
@@ -848,8 +872,9 @@ impl Chip8 {
         // Fetch opcode
         //let _: () = self.memory[self.program_counter as usize].checked_shl(8).unwrap_or(0);
         self.op_code = ((self.memory[self.program_counter as usize] as u16).checked_shl(8).unwrap_or(0)) | self.memory[(self.program_counter + 1) as usize] as u16;
-        println!("Opcode: {}", &self.op_code);
-
+        if (self.debug_mode) { 
+            eprintln!("Opcode: {}", &self.op_code);
+        }
         // increment pc before we do anything
         self.program_counter += 2;
 
