@@ -34,8 +34,9 @@ The goal of this emulator isn't to write a very efficient and memory safe one, [
 ## Executing program
 
 ```
-tbd
+chip8-rs -c 10 -d --rom <path to rom>
 ```
+Argument `-c` and `-d` are optional, they default to `10` and `false`, they stand for clock(it's really a delay) and debug mode, which by default is off.
 
 ## Help
 
