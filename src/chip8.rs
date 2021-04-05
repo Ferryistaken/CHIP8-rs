@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use rand::Rng;
-use std::{collections::vec_deque, convert::TryFrom};
+use std::{collections::vec_deque, convert::TryFrom, ops::ShlAssign};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
@@ -120,6 +120,7 @@ impl Chip8 {
         self.table0 = table0;
         self.table8 = table8;
         self.tableE = tableE;
+        self.tableF = tableF;
 
         if (self.debug_mode) {
             eprintln!("Tables loaded");
@@ -190,7 +191,7 @@ impl Chip8 {
         // █ &(0xFFFFFFFF as u32)
         //print!("\x1B[2J\x1B[1;1H");
         print!("\x1B[2J\x1B[1;1H");
-        let mut new_vec = self.video.into_iter().peekable();
+        let mut new_vec = self.video.iter().peekable();
         let mut rows: Vec<Vec<_>> = vec![];
         while new_vec.peek().is_some() {
             let chunk: Vec<_> = new_vec.by_ref().take(64).collect();
@@ -485,9 +486,9 @@ impl Chip8 {
             self.registers[0xF] = 0;
         }
 
-        eprintln!("{} {}", self.registers[Vx as usize], self.registers[Vy as usize]);
 
-        self.registers[Vx as usize] += 255 - self.registers[Vy as usize];
+        self.registers[Vx as usize] += (((255 - self.registers[Vy as usize]) as u16 + 1) & 0x00FF) as u8;
+
         if self.debug_mode {
             eprintln!("Ran opcode: {}", function_name!());
         }
@@ -536,7 +537,7 @@ impl Chip8 {
         // save MSB in VF
         self.registers[0xF] = (self.registers[Vx as usize] & 0x80).checked_shr(7).unwrap_or(0);
 
-        self.registers[Vx as usize].checked_shl(1).unwrap_or(0);
+        self.registers[Vx as usize].shl_assign(1);
         if self.debug_mode {
             eprintln!("Ran opcode: {}", function_name!());
         }
@@ -796,7 +797,7 @@ impl Chip8 {
     fn OP_Fx55(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
-        for i in 0..Vx {
+        for i in 0..(Vx +1) {
             self.memory[(self.index_register + i) as usize] = self.registers[i as usize];
         }
         if self.debug_mode {
@@ -809,7 +810,7 @@ impl Chip8 {
     fn OP_Fx65(&mut self) {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
 
-        for i in 0..Vx {
+        for i in 0..(Vx +1) {
             self.registers[i as usize] = self.memory[(self.index_register + i) as usize];
         }
         if self.debug_mode {
