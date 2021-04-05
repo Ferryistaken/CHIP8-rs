@@ -396,10 +396,8 @@ impl Chip8 {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let byte: u8 = (self.op_code as u8) & 0x00FF;
 
-        eprintln!("Vx: {}, Byte: {}, Register: {}", &Vx, &byte, self.registers[Vx as usize]);
-
         self.registers[Vx as usize] = (((self.registers[Vx as usize] as u16) + byte as u16) % 256) as u8;
-        
+
         if self.debug_mode {
             eprintln!("Ran opcode: {}", function_name!());
         }
@@ -460,7 +458,7 @@ impl Chip8 {
         let Vx: u16 = (self.op_code & 0x0F00).checked_shr(8).unwrap_or(0);
         let Vy: u16 = (self.op_code & 0x00F0).checked_shr(4).unwrap_or(0);
 
-        let sum: u16 = (self.registers[Vx as usize] + self.registers[Vy as usize]) as u16;
+        let sum: u16 = self.registers[Vx as usize] as u16 + self.registers[Vy as usize] as u16;
 
         if sum > 255 {
             self.registers[0xF] = 1;
@@ -487,7 +485,9 @@ impl Chip8 {
             self.registers[0xF] = 0;
         }
 
-        self.registers[Vx as usize] -= self.registers[Vy as usize];
+        eprintln!("{} {}", self.registers[Vx as usize], self.registers[Vy as usize]);
+
+        self.registers[Vx as usize] += 255 - self.registers[Vy as usize];
         if self.debug_mode {
             eprintln!("Ran opcode: {}", function_name!());
         }

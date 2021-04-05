@@ -20,7 +20,7 @@ fn main() {
     loop {
         chip8.Cycle();
         chip8.pretty_print_video();
-        thread::sleep(time::Duration::from_millis(100));
+        thread::sleep(time::Duration::from_millis(10));
     }
 
 }
