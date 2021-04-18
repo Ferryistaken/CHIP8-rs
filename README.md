@@ -33,9 +33,15 @@ The goal of this emulator isn't to write a very efficient and memory safe one, [
 
 ## Executing program
 
+<p align="center">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/opcode-test-ss.png?raw=true">
+</p>
+
 ```
-tbd
+chip8-rs -c 10 -d --rom <path to rom>
 ```
+
+Arguments `-c` and `-d` are optional, they default to `10` and `false`, they stand for clock(it's really a delay) and debug mode, which by default is off.
 
 ## Help
 
