@@ -47,12 +47,43 @@ Arguments `-c` and `-d` are optional, they default to `10` and `false`, they sta
 
 If you have any problems [create a new issue.](https://github.com/Ferryistaken/CHIP8-rs/issues/new)
 
-## Authors
+## Contributors
 
 Contributors names and contact info
 
 Alessandro Ferrari - 
 [Site](http://ferrry.tk) <br>
+
+# More Pictures
+
+<p align="center">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/ibm-logo-ss.png?raw=true">
+</p>
+
+
+<p align="center">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/hello-ss.png?raw=true">
+</p>
+
+
+<p align="center">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/maze-ss.png?raw=true">
+</p>
+
+
+<p align="center">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/zero-ss.png?raw=true">
+</p>
+
+
+<p align="center">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/sqrt-ss.png?raw=true">
+</p>
+
+
+<p align="center">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/plane-ss.png?raw=true">
+</p>
 
 
 ## License
