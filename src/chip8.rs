@@ -1,7 +1,8 @@
 #![allow(non_snake_case)]
+#![allow(unused_parens)]
 
 use rand::Rng;
-use std::{collections::vec_deque, convert::TryFrom, ops::ShlAssign};
+use std::{convert::TryFrom, ops::ShlAssign};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
@@ -78,10 +79,11 @@ impl Chip8 {
 
     /// Add the correct function pointer tables to the newly created Chip8 object
     pub fn add_table(&mut self) {
+        // TODO: this functions is useless, I can do everything in the constructor
         if (self.debug_mode) {
             eprintln!("Loading tables");
         }
-        let mut table: [fn(&mut Chip8); 0xF+1] = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
+        let table: [fn(&mut Chip8); 0xF+1] = [Chip8::Table0, Chip8::OP_1nnn, Chip8::OP_2nnn, Chip8::OP_3xkk, Chip8::OP_4xkk, Chip8::OP_5xy0, Chip8::OP_6xkk, Chip8::OP_7xkk, Chip8::Table8, Chip8::OP_9xy0, Chip8::OP_Annn, Chip8::OP_Bnnn, Chip8::OP_Cxkk, Chip8::OP_Dxyn, Chip8::TableE, Chip8::TableF];
         // TODO: filling them with OP_ERR is redundant as I already do so when creating the array in the constructor
         let mut table0: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];
         let mut table8: [fn(&mut Chip8); 0xE+1] = [Chip8::OP_ERR; 0xE+1];

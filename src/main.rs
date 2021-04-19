@@ -5,7 +5,12 @@ mod chip8;
 use chip8::Chip8;
 use std::{thread, time};
 
-use std::time::Duration;
+extern crate termion;
+
+use termion::event::Key;
+use termion::input::TermRead;
+use termion::raw::IntoRawMode;
+use std::io::{Write, stdout, stdin};
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "Example", about = "CHIP8-rs options")]
@@ -35,6 +40,31 @@ fn main() {
 
     // TODO: make it so that the file is taken as a positional argument
     chip8.load_rom(opt.rom);
+
+    // let stdin = stdin();
+    // let mut stdout = stdout().into_raw_mode().unwrap();
+
+    // for c in stdin.keys() {
+    //     write!(stdout,
+    //         "{}{}",
+    //         termion::cursor::Goto(1, 1),
+    //         termion::clear::CurrentLine)
+    //         .unwrap();
+        
+    //         match c.unwrap() {
+    //             Key::Char('q') => break,
+    //             Key::Char(c) => println!("{}", c),
+    //             Key::Alt(c) => println!("^{}", c),
+    //             Key::Ctrl(c) => println!("*{}", c),
+    //             Key::Esc => println!("ESC"),
+    //             Key::Left => println!("←"),
+    //             Key::Right => println!("→"),
+    //             Key::Up => println!("↑"),
+    //             Key::Down => println!("↓"),
+    //             Key::Backspace => println!("×"),
+    //             _ => {}
+    //         }
+    // }
 
 
     loop {
