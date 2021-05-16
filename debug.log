@@ -1,58 +1,82 @@
-Debug mode activated
-Loading ROM: "roms/IBM-Logo.ch8"
-ROM Loaded
-Opcode: 224
-Ran opcode: OP_00E0
-Ran opcode: Table0
-Opcode: 41514
-Ran opcode: OP_Annn
-Opcode: 24588
-Ran opcode: OP_6xkk
-Opcode: 24840
-Ran opcode: OP_6xkk
-Opcode: 53279
-Ran opcode: OP_Dxyn
-Opcode: 28681
-Ran opcode: OP_7xkk
-Opcode: 41529
-Ran opcode: OP_Annn
-Opcode: 53279
-Ran opcode: OP_Dxyn
-Opcode: 41544
-Ran opcode: OP_Annn
-Opcode: 28680
-Ran opcode: OP_7xkk
-Opcode: 53279
-Ran opcode: OP_Dxyn
-Opcode: 28676
-Ran opcode: OP_7xkk
-Opcode: 41559
-Ran opcode: OP_Annn
-Opcode: 53279
-Ran opcode: OP_Dxyn
-Opcode: 28680
-Ran opcode: OP_7xkk
-Opcode: 41574
-Ran opcode: OP_Annn
-Opcode: 53279
-Ran opcode: OP_Dxyn
-Opcode: 28680
-Ran opcode: OP_7xkk
-Opcode: 41589
-Ran opcode: OP_Annn
-Opcode: 53279
-Ran opcode: OP_Dxyn
-Opcode: 4648
-Ran opcode: OP_1nnn
-Opcode: 4648
-Ran opcode: OP_1nnn
-Opcode: 4648
-Ran opcode: OP_1nnn
-Opcode: 4648
-Ran opcode: OP_1nnn
-Opcode: 4648
-Ran opcode: OP_1nnn
-Opcode: 4648
-Ran opcode: OP_1nnn
-Opcode: 4648
-Ran opcode: OP_1nnn
+warning: unused import: `termion::raw::IntoRawMode`
+ --> src/main.rs:8:5
+  |
+8 | use termion::raw::IntoRawMode;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused imports: `Write`, `stdout`
+ --> src/main.rs:9:15
+  |
+9 | use std::io::{Write, stdout, stdin};
+  |               ^^^^^  ^^^^^^
+
+warning: unused imports: `event::Key`, `raw::RawTerminal`
+ --> src/platform.rs:3:15
+  |
+3 | use termion::{event::Key, raw::RawTerminal};
+  |               ^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused import: `stdin`
+ --> src/platform.rs:7:29
+  |
+7 | use std::io::{Stdin, Write, stdin, stdout, stderr};
+  |                             ^^^^^
+
+warning: unused import: `platform::get_one_key`
+  --> src/main.rs:13:5
+   |
+13 | use platform::get_one_key;
+   |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `stderr`
+  --> src/platform.rs:13:13
+   |
+13 |     let mut stderr = stderr().into_raw_mode().unwrap();
+   |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_stderr`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `stdin`
+  --> src/platform.rs:10:20
+   |
+10 | pub fn get_one_key(stdin: Stdin) {
+   |                    ^^^^^ help: if this is intentional, prefix it with an underscore: `_stdin`
+
+warning: variable does not need to be mutable
+  --> src/platform.rs:13:9
+   |
+13 |     let mut stderr = stderr().into_raw_mode().unwrap();
+   |         ----^^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
+
+warning: associated function is never used: `debug`
+   --> src/chip8.rs:133:12
+    |
+133 |     pub fn debug(&mut self) {
+    |            ^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: associated function is never used: `dump_rom`
+   --> src/chip8.rs:174:12
+    |
+174 |     pub fn dump_rom(&self, start_address: usize, byte_number: usize) -> Vec<u8> {
+    |            ^^^^^^^^
+
+warning: associated function is never used: `dump_video`
+   --> src/chip8.rs:183:12
+    |
+183 |     pub fn dump_video(&mut self) -> Vec<u32> {
+    |            ^^^^^^^^^^
+
+warning: 11 warnings emitted
+
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
+     Running `target/debug/chip8-rs --rom roms/test_opcode.ch8`
+thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', src/platform.rs:52:24
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

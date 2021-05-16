@@ -5,12 +5,8 @@ mod chip8;
 use chip8::Chip8;
 use std::{thread, time};
 
-use termion::raw::IntoRawMode;
-use std::io::{Write, stdout, stdin};
-
 mod platform;
 
-use platform::checkKey;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "Example", about = "CHIP8-rs options")]
@@ -39,9 +35,7 @@ fn main() {
     // TODO: make it so that the file is taken as a positional argument
     chip8.load_rom(opt.rom);
     
-    let stdin  = stdin();
 
-    platform::checkKey(stdin);
 
     loop {
         chip8.Cycle();
