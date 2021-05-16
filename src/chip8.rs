@@ -893,3 +893,17 @@ impl Chip8 {
     }
 
 }
+
+/*
+
+    UNIT TESTS
+
+*/
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn add_two() {
+        assert_eq!(2, 1 +1);
+    }
+}
