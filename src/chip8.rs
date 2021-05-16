@@ -895,9 +895,9 @@ impl Chip8 {
 }
 
 /*
-
-    UNIT TESTS
-
+*
+*   UNIT TESTS
+*
 */
 
 #[cfg(test)]
