@@ -1,0 +1,13 @@
+{
+	"$schema": "https://puremourning.github.io/vimspector/schema/vimspector.schema.json",
+	"configurations": {
+		"Run - CodeLLDB": {
+			"adapter": "CodeLLDB",
+			"configuration": {
+				"request": "launch",
+				"program": "${workspaceRoot}/target/debug/chip8-rs",
+				"args": ["--rom", "roms/BC_test.ch8"]
+			}
+		}
+	}
+}

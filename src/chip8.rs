@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 #![allow(unused_parens)]
+#![allow(dead_code)]
 
 use rand::Rng;
 use std::{convert::TryFrom, ops::ShlAssign};

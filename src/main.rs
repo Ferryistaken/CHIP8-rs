@@ -34,8 +34,6 @@ fn main() {
 
     // TODO: make it so that the file is taken as a positional argument
     chip8.load_rom(opt.rom);
-    
-
 
     loop {
         chip8.Cycle();

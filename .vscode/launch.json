@@ -7,6 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "New",
+            "cargo": {
+                "args": ["run", "--", "--rom", "roms/test_opcode.ch8"],
+            },
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug executable 'chip8-rs'",
             "cargo": {
                 "args": [
@@ -36,6 +45,23 @@
                 "filter": {
                     "name": "chip8-rs",
                     "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Build and run",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--",
+                    "--rom",
+                    "roms/test_opcode.ch8"
+                ],
+                "filter": {
                 }
             },
             "args": [],
