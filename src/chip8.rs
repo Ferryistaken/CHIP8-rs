@@ -525,7 +525,9 @@ impl Chip8 {
             self.registers[0xF] = 0;
         }
 
-        self.registers[Vx as usize] = self.registers[Vy as usize] - self.registers[Vx as usize];
+        //self.registers[Vx as usize] = self.registers[Vy as usize] - self.registers[Vx as usize];
+        self.registers[Vx as usize] = self.registers[Vy as usize].wrapping_sub(self.registers[Vx as usize]);
+
         if self.debug_mode {
             eprintln!("Ran opcode: {}", function_name!());
         }
