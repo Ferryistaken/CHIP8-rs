@@ -12,7 +12,7 @@ use function_name::named;
 
 /// General chip 8 struct
 pub struct Chip8 {
-    registers: [u8; 16], 
+    registers: [u8; 16],
     memory: [u8; 4096],
     index_register: u16,
     program_counter: u16,
@@ -490,7 +490,7 @@ impl Chip8 {
         }
 
 
-        self.registers[Vx as usize] += (((255 - self.registers[Vy as usize]) as u16 + 1) & 0x00FF) as u8;
+        self.registers[Vx as usize] = self.registers[Vx as usize].wrapping_sub(self.registers[Vy as usize]);
 
         if self.debug_mode {
             eprintln!("Ran opcode: {}", function_name!());
