@@ -32,7 +32,6 @@ fn main() {
     let mut chip8: Chip8 = Chip8::new();
     //chip8.debug();
 
-    // TODO: make it so that the file is taken as a positional argument
     chip8.load_rom(opt.rom);
 
     loop {
