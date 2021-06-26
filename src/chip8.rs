@@ -626,6 +626,10 @@ impl Chip8 {
                 let sprite_pixel = sprite_byte & ((0x80 as u16).checked_shr(col as u32).unwrap_or(0) as u8);
                 // casting without error checking here is fine because col and raw wil alwyays be lower than 255(they are 64 and 32)
                 //let mut screen_pixel = self.video[(((y_pos as u16 + row) * (VIDEO_WIDTH as u16) + (x_pos as u16) + col)) as usize];
+
+                // TODO: Fix this, sometimes the index is out of bounds because rust doesn't wrap,
+                // so all subtractions and all additions should be wrapping_sub() and wrapping_add()
+                // instead of normal + and -.
                 let video_index = ((y_pos as u16 + row) * (VIDEO_WIDTH as u16) + (x_pos as u16) + col) as usize;
 
                 // sprite pixel is on
