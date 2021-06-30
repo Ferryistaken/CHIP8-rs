@@ -89,7 +89,6 @@ Alessandro Ferrari -
   <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/plane-ss.png?raw=true">
 </p>
 
-
 ## License
 
 This project is licensed under the MIT License - see the LICENSE.txt file for details
