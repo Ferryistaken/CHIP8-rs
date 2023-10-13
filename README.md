@@ -1,3 +1,5 @@
+> View a writeup of this project on [my website](https://alessandroferrari.live/chip8-emulator-written-in-rust/)
+---
 # CHIP8-rs - A chip 8 emulator written in pure rust
 
 <div align=center>
