@@ -35,6 +35,24 @@ pub struct Chip8 {
 impl Chip8 {
     /// Create a new chip8 instance with an empty `rom`, ready for use
     ///
+    /// # Example:
+    ///
+    /// ```
+    /// let mut chip8: Chip8 = Chip8::new();
+    ///
+    /// chip.load_rom(path);
+    ///
+    /// let rom: PathBuf = '...';
+    /// let speed: u64 = 30;
+    ///
+    /// loop {
+    ///
+    ///     chip8.Cycle();
+    ///     chip8.pretty_print_video(rom);
+    ///     thread::sleep(time::Duration::from_millis(speed);
+    /// }
+    /// ```
+    ///
     /// ## Values
     ///
     /// * `registers`: all zeroes
