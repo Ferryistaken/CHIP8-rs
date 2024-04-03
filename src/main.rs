@@ -3,7 +3,6 @@ use structopt::StructOpt;
 
 mod chip8;
 use chip8::Chip8;
-use std::{thread, time};
 
 mod platform;
 
@@ -34,11 +33,6 @@ fn main() {
 
     chip8.load_rom(opt.rom);
 
-    loop {
-        chip8.Cycle();
-        chip8.pretty_print_video();
-        thread::sleep(time::Duration::from_millis(opt.speed));
-    }
-
+    chip8.play(opt.speed);
 }
 
