@@ -9,6 +9,7 @@ use std::io::prelude::*;
 use std::convert::TryInto;
 use std::path::PathBuf;
 use std::ops::ShrAssign;
+use std::collections::VecDeque;
 use function_name::named;
 
 /// General chip 8 struct
@@ -21,7 +22,8 @@ pub struct Chip8 {
     stack_pointer: u8,
     delay_timer: u8,
     sound_timer: u8,
-    keypad: [u8; 16],
+    pub keypad: [u8; 16],
+    recent_presses: VecDeque<u8>,
     pub video: [u32; 64 * 32],
     op_code: u16,
     table: [fn(&mut Chip8); 0xF+1],
@@ -80,6 +82,7 @@ impl Chip8 {
             delay_timer: 0,
             sound_timer: 0,
             keypad: [0; 16],
+            recent_presses: VecDeque::new(),
             video: [0; 2048],
             op_code: 0,
             table: [Chip8::OP_ERR; 0xF+1],
@@ -219,13 +222,8 @@ impl Chip8 {
         return rom;
     }
 
-    pub fn dump_video(&mut self) -> Vec<u32> {
-        let mut buf: Vec<u32> = Vec::new();
-
-        for i in 0..self.video.len() {
-            buf.push(self.video[i]);
-        }
-        return buf;
+    pub fn export_video(&mut self) -> &[u32; 64 * 32] {
+        &self.video
     }
 
     pub fn pretty_print_video(&mut self) {
@@ -293,6 +291,31 @@ impl Chip8 {
     pub fn rand_byte(&self) -> u8 {
         let mut rng = rand::thread_rng();
         return rng.gen_range(0, 255);
+    }
+
+    #[inline]
+    pub fn key_down(&mut self, k: u8) {
+        let idx = k as usize;
+        if self.keypad[idx] == 0 {
+            self.keypad[idx] = 1;
+            // record only the transition (press edge)
+            self.recent_presses.push_back(k);
+        }
+    }
+
+    #[inline]
+    pub fn key_up(&mut self, k: u8) {
+        self.keypad[k as usize] = 0;
+    }
+
+    #[inline]
+    pub fn is_key_down(&self, k: u8) -> bool {
+        self.keypad[k as usize] != 0
+    }
+
+    /// Use this in FX0A (wait for key): returns one press if available.
+    pub fn take_recent_press(&mut self) -> Option<u8> {
+        self.recent_presses.pop_front()
     }
 
     //
