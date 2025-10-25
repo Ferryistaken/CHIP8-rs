@@ -32,6 +32,7 @@ pub struct Chip8 {
     tableE: [fn(&mut Chip8); 0xE+1],
     tableF: [fn(&mut Chip8); 0x65+1],
     debug_mode: bool,
+    last_opcode: u16,
 }
 
 
@@ -91,6 +92,7 @@ impl Chip8 {
             tableE: [Chip8::OP_ERR; 0xE+1],
             tableF: [Chip8::OP_ERR; 0x65+1],
             debug_mode: false,
+            last_opcode: 0,
         };
 
         chip8.load_fonts();
@@ -99,6 +101,8 @@ impl Chip8 {
 
         return chip8;
     }
+
+    pub fn last_opcode(&self) -> u16 { self.last_opcode }
 
     /// Adds the correct function pointer tables to the newly created Chip8 object
     pub fn add_table(&mut self) {
@@ -964,6 +968,7 @@ impl Chip8 {
         if (self.debug_mode) { 
             eprintln!("Opcode: {}", &self.op_code);
         }
+        self.last_opcode = self.op_code;
         // increment pc before we do anything
         self.program_counter += 2;
 
