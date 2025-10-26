@@ -1,25 +1,16 @@
 use std::collections::VecDeque;
-use std::path::PathBuf;
-use structopt::StructOpt;
 
 use crate::chip8::Chip8;
-use std::{io, thread, time};
 
 use ratatui::{
-    backend::CrosstermBackend,
     buffer::Buffer,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::Rect,
     style::{Color, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::{Block, Borders, Paragraph, Widget, Wrap},
-    Terminal,
 };
 
-use ratatui::crossterm::{
-    execute,
-    event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
+use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 
 // ---------- Key mapping ----------
 pub fn map_pc_to_chip8(code: KeyCode) -> Option<u8> {
@@ -77,7 +68,6 @@ pub fn pump_input(
                         KeyEventKind::Release => {
                             // we clear keys each frame anyway
                         }
-                        _ => {}
                     }
                 }
             }
@@ -106,7 +96,8 @@ impl<'a> Widget for Chip8Screen<'a> {
                 let idx = (sy * 64 + sx) as usize;
                 let on = self.video[idx] != 0;
 
-                let cell = buf.get_mut(area.x + tx, area.y + ty);
+                let cell = &mut buf[(area.x + tx, area.y + ty)];
+
                 cell.set_symbol(" ");
                 cell.set_style(Style::default().bg(if on { self.on } else { self.off }));
             }
@@ -136,13 +127,6 @@ impl LogBuf {
             .block(Block::default().borders(Borders::ALL).title(title))
             .wrap(Wrap { trim: false })
     }
-}
-
-// “replace println!” helper
-macro_rules! dbg_log {
-    ($logs:expr, $($arg:tt)*) => {{
-        $logs.push(format!($($arg)*));
-    }};
 }
 
 pub fn fit_chip8_top_left(area: Rect) -> Rect {

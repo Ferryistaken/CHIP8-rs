@@ -1,4 +1,3 @@
-use std::collections::VecDeque;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -14,17 +13,15 @@ use crate::platform::{
 
 use ratatui::{
     backend::CrosstermBackend,
-    buffer::Buffer,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Widget, Wrap},
+    widgets::{Block, Borders, Paragraph},
     Terminal,
 };
 
 use ratatui::crossterm::{
     execute,
-    event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
