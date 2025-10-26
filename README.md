@@ -42,6 +42,9 @@ The goal of this emulator isn't to write a very efficient and memory safe one, [
 <p align="center">
   <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/opcode-test-ss.png?raw=true">
 </p>
+<p align="center">
+  <img src="https://github.com/Ferryistaken/CHIP8-rs/blob/master/assets/chip-debugmode.png?raw=true">
+</p>
 
 ```
 chip8-rs -c 10 -d --rom <path to rom>

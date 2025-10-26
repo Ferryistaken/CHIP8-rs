@@ -10,6 +10,8 @@ use std::convert::TryInto;
 use std::path::PathBuf;
 use std::ops::ShrAssign;
 use std::collections::VecDeque;
+use std::{thread, time};
+
 use function_name::named;
 
 /// General chip 8 struct
@@ -98,11 +100,29 @@ impl Chip8 {
         chip8.load_fonts();
         chip8.add_table();
 
-
         return chip8;
     }
 
     pub fn last_opcode(&self) -> u16 { self.last_opcode }
+    /// Runs the CHIP8 Machine forever with the currently loaded ROM.
+    /// The clock speed is determined by the passed in `speed` parameter.
+    ///
+    /// ```
+    /// loop {
+    ///     self.Cycle();
+    ///     self.pretty_print_video();
+    ///     thread::sleep(cycle_wait_time);
+    /// }
+    /// ```
+    pub fn play(&mut self, speed: u64) {
+        let cycle_wait_time = time::Duration::from_millis(speed);
+
+        loop {
+            self.Cycle();
+            self.pretty_print_video();
+            thread::sleep(cycle_wait_time);
+        }
+    }
 
     /// Adds the correct function pointer tables to the newly created Chip8 object
     pub fn add_table(&mut self) {
