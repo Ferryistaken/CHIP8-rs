@@ -2,7 +2,6 @@
   command = "chmod +x ./netlify-build.sh && ./netlify-build.sh"
   publish = "dist"
 
-# (Optional) strong caching for WASM/JS; adjust as you prefer
 [[headers]]
   for = "/pkg/*.wasm"
   [headers.values]

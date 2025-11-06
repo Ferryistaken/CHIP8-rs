@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# install rustup non-interactively and make cargo tools available
-curl https://sh.rustup.rs -sSf | sh -s -- -y
 export PATH="$HOME/.cargo/bin:$PATH"
+export CARGO_TERM_COLOR=always
 
-# ensure a stable toolchain is present
+# Ensure stable Rust (Netlify already has Rust; this is idempotent)
+rustup toolchain install stable -y >/dev/null 2>&1 || true
 rustup default stable
 
-# install wasm-pack
-curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-export PATH="$HOME/.cargo/bin:$PATH"
+# Install/overwrite wasm-pack so we control the version
+# (-f matters, otherwise the old one remains)
+curl -sSf https://rustwasm.github.io/wasm-pack/installer/init.sh | sh -s -- -f
 
-# build the wasm package and assemble dist
-wasm-pack build --target web --features web --out-dir pkg
+# Build WASM - NOTE: no --out-dir (avoid unstable cargo flag path)
+# Also: pass cargo flags *after* `--`
+wasm-pack build --release --target web -- --features web
+
+# Assemble dist
 rm -rf dist
-mkdir dist
-cp -r static/* dist
+mkdir -p dist
+cp -r static/* dist/
 cp -r pkg dist/pkg
+[ -d roms ] && mkdir -p dist/roms && cp -r roms/* dist/roms || true
+
