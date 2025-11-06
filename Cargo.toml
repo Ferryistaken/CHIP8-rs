@@ -1,11 +1,64 @@
 [package]
 name = "chip8-rs"
 version = "0.1.0"
-authors = ["Ferry <alessandroferry@protonmail.com>"]
+authors = ["Ferry <alessandroferrari@gatech.edu>"]
 edition = "2018"
 
+[lib]
+name = "chip8_rs"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+cli = ["dep:ratatui", "dep:crossterm", "dep:structopt"]
+web = ["dep:wasm-bindgen", "dep:web-sys", "dep:js-sys", "dep:console_error_panic_hook"]
+
+[[bin]]
+name = "cli"
+path = "src/bin/cli.rs"
+required-features = ["cli"]
+
 [dependencies]
-rand = "0.7.3"
 function_name = "0.2.0"
-structopt = "0.3.21"
-ratatui = "0.29.0"
+
+# --- CLI deps ---
+[dependencies.ratatui]
+version = "0.29"
+optional = true
+
+[dependencies.structopt]
+version = "0.3.26"
+optional = true
+
+[dependencies.crossterm]
+version = "0.28"
+optional = true
+
+# --- Web deps ---
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "Window",
+  "Document",
+  "HtmlCanvasElement",
+  "CanvasRenderingContext2d",
+  "KeyboardEvent",
+  "AudioContext",
+  "OscillatorNode",
+  "GainNode",
+  "AudioDestinationNode",
+  "console"
+]
+optional = true
+
+[dependencies.js-sys]
+version = "0.3"
+optional = true
+
+[dependencies.console_error_panic_hook]
+version = "0.1"
+optional = true

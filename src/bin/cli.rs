@@ -1,14 +1,16 @@
+#![cfg(all(feature = "cli", not(target_arch = "wasm32")))]
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-mod chip8;
+use chip8_rs::chip8;
 use chip8::Chip8;
 use std::{io, thread, time};
 
-mod platform;
-
-use crate::platform::{
-    *
+use chip8_rs::platform::{
+    Chip8Screen,
+    pump_input,
+    fit_chip8_top_left,
+    LogBuf
 };
 
 use ratatui::{

@@ -2,7 +2,6 @@
 #![allow(unused_parens)]
 #![allow(dead_code)]
 
-use rand::Rng;
 use std::{convert::TryFrom, ops::ShlAssign};
 use std::fs::File;
 use std::io::prelude::*;
@@ -13,6 +12,7 @@ use std::collections::VecDeque;
 use std::{thread, time};
 
 use function_name::named;
+
 
 /// General chip 8 struct
 pub struct Chip8 {
@@ -35,6 +35,7 @@ pub struct Chip8 {
     tableF: [fn(&mut Chip8); 0x65+1],
     debug_mode: bool,
     last_opcode: u16,
+    rng_state: u32,
 }
 
 
@@ -95,6 +96,7 @@ impl Chip8 {
             tableF: [Chip8::OP_ERR; 0x65+1],
             debug_mode: false,
             last_opcode: 0,
+            rng_state: 77,
         };
 
         chip8.load_fonts();
@@ -202,38 +204,64 @@ impl Chip8 {
         eprintln!("Debug mode activated");
     }
 
+    /// needed for wasm
+    #[inline]
+    fn rand_byte(&mut self) -> u8 {
+        let mut x = if self.rng_state == 0 { 0x1234_5678 } else { self.rng_state };
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        self.rng_state = x;
+        (x & 0xFF) as u8
+    }
+
+    pub fn reset_hard(&mut self) {
+        // keep fonts if you store them in low memory; reload them here if needed
+        self.memory.fill(0);
+        self.load_fonts();
+
+        self.program_counter = 0x200;
+        self.index_register = 0;
+        self.stack_pointer = 0;
+        self.stack.fill(0);
+
+        self.video.fill(0);
+        self.delay_timer = 0;
+        self.sound_timer = 0;
+
+        self.video.fill(0);
+        self.keypad.fill(0);
+
+        self.rng_state = 0x1234_5678; // fixed seed for determinism
+        self.last_opcode = 0;
+    }
+
+    pub fn reset_and_load_bytes(&mut self, rom: &[u8]) -> Result<(), Chip8Error> {
+        self.reset_hard();
+        const START: usize = 0x200;
+        if START + rom.len() > self.memory.len() {
+            return Err(Chip8Error::MemOob(START + rom.len()));
+        }
+        self.memory[START..START + rom.len()].copy_from_slice(rom);
+        Ok(())
+    }
+
     /// Loads a given rom into memory, starting from memory address 0x200
-    pub fn load_rom(&mut self, path: PathBuf) {
-        if (self.debug_mode) {
-            eprintln!("Loading ROM: {:?}", &path);
-        }
-        // memory addres before this are reserved
-        let start_address = 0x200;
+    pub fn load_rom(&mut self, path: PathBuf) -> Result<(), std::io::Error> {
+        let bytes = std::fs::read(path)?;
+        self.reset_and_load_bytes(&bytes).map_err(|_| std::io::ErrorKind::InvalidData.into())
+    }
 
-        // open rom file
-        let file: File = File::open(path).expect("Error opening rom file");
+    pub fn load_rom_bytes(&mut self, rom: &[u8]) {
+        const START: usize = 0x200;
 
-        // buffer to store bytes in
-        let mut buf: Vec<u8> = Vec::new();
-
-        // read the bytes from file
-        for byte in file.bytes() {
-            let byte = match byte {
-                Ok(byte) => byte,
-                Err(error) => panic!("Provided rom is not a valid binary. {:?}", error),
-            };
-            buf.push(byte);
-        }
-        // println!("{:x?}", buf);
-
-        // load the buffer into the chip 8 memory
-        for i in 0..buf.len() {
-            self.memory[start_address + i] = buf[i];
+        let mem_len = self.memory.len();
+        if START >= mem_len {
+            return;
         }
 
-        if (self.debug_mode) {
-            eprintln!("ROM Loaded");
-        }
+        let copy_len = rom.len().min(mem_len - START);
+        self.memory[START..START + copy_len].copy_from_slice(&rom[..copy_len]);
     }
 
     /// Returns `byte_number` amount of bytes after the `pointer` in rom
@@ -309,12 +337,6 @@ impl Chip8 {
         if (self.debug_mode) {
             eprintln!("Fontset loaded");
         }
-    }
-
-    /// Generate a random byte(0, 255)
-    pub fn rand_byte(&self) -> u8 {
-        let mut rng = rand::thread_rng();
-        return rng.gen_range(0, 255);
     }
 
     #[inline]
@@ -1008,6 +1030,38 @@ impl Chip8 {
     }
 
 }
+
+#[derive(Debug, Clone)]
+pub enum Chip8Error {
+    UnknownOpcode(u16),
+    PcOob(u16),
+    MemOob(usize),
+    StackOverflow,
+    StackUnderflow,
+    BadRegisterIndex(u8),
+}
+
+use std::fmt;
+
+impl fmt::Display for Chip8Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Chip8Error::UnknownOpcode(op) =>
+                write!(f, "Unknown opcode: {:04X}", op),
+            Chip8Error::PcOob(pc) =>
+                write!(f, "PC out of bounds: {:04X}", pc),
+            Chip8Error::MemOob(addr) =>
+                write!(f, "Memory access out of bounds: {:#X}", addr),
+            Chip8Error::StackOverflow =>
+                write!(f, "Stack overflow"),
+            Chip8Error::StackUnderflow =>
+                write!(f, "Stack underflow"),
+            Chip8Error::BadRegisterIndex(r) =>
+                write!(f, "Invalid register index: {}", r),
+        }
+    }
+}
+
 
 /*
 *

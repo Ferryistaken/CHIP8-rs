@@ -1,0 +1,386 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>CHIP-8 (Rust/WASM)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --bg:#FFFFFF;      /* near-black */
+    --ink:#000000;     /* text */
+    --ink-dim:#000000; /* secondary */
+    --accent:#FEFEFE;  /* your only color */
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace;
+  }
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 var(--mono);}
+
+  /* layout */
+  main{
+    display:grid; gap:16px; padding:24px;
+    grid-template-columns: minmax(540px,1fr) 300px;
+  }
+  @media (max-width: 920px){ main{ grid-template-columns: 1fr; } }
+
+  .card{
+    background:#FEFEFE;
+    border:1px solid #0f1a2a;
+    border-radius:12px;
+    padding:16px;
+    overflow:visible;
+  }
+
+  /* header & titles */
+  .mast{ padding:20px 24px 0; }
+  .mast h1{
+    margin:0;
+    font-weight:800;
+    font-size: clamp(28px, 5vw, 56px);
+    letter-spacing:.5px;
+    font-family: sans-serif;
+  }
+  .title{
+    margin:0 0 12px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  .blurb{ margin:12px 0 0; color:var(--ink-dim); }
+
+  /* canvas */
+  #screen{
+    display:block; width:100%; max-width:100%;
+    height:auto; aspect-ratio: 2 / 1;      /* 640×320 */
+    image-rendering: pixelated;
+    border-radius:10px;
+    outline:1px solid #0f1a2a;
+  }
+
+  /* inputs & buttons */
+  .row{ display:flex; gap:8px; align-items:center; }
+  input[type="text"], select, button{
+    font:inherit; color:var(--ink);
+    background:#FEFEFE; border:1px solid #182842;
+    border-radius:10px; padding:8px 10px;
+  }
+  button{ cursor:pointer; transition:background .12s ease, transform .06s ease; }
+  button:hover{ background:#121f34; transform: translateY(-1px); }
+  small{ color:var(--ink-dim); }
+
+  /* custom file button (prevents native input overflow) */
+  .file-btn{
+    position:relative; display:inline-block;
+    background:#FEFEFE; border:1px solid #182842; border-radius:10px;
+    padding:8px 12px; cursor:pointer;
+  }
+  .file-btn input[type=file]{
+    position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+  }
+
+  /* keypad */
+  .keypad{ display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
+  .key{
+    background:#FEFEFE; border:1px dashed #182842; border-radius:10px; padding:12px 0;
+    text-align:center; user-select:none; touch-action:none; cursor:pointer; font-weight:800;
+  }
+  .key.pressed{ outline:2px solid var(--accent); }
+</style>
+
+<header class="mast">
+    <h1>CHIP-8 Emulator - <a href="https://alessandroferrari.live">Home</a></h1>
+</header>
+
+<main>
+  <!-- LEFT: Display -->
+  <section class="card">
+    <canvas id="screen" width="640" height="320"></canvas>
+
+    <p>Full CHIP8 Rust implementation, built for cli (ratatui) and WASM.</p>
+
+<p class="blurb">
+- Source code at 
+<a href="https://github.com/Ferryistaken/CHIP8-rs" target="_blank" rel="noopener noreferrer">
+  github.com/Ferryistaken/CHIP8-rs
+</a>
+</p>
+
+<p class="blurb">
+- Docs at 
+<a href="https://chip8rs-docs.alessandroferrari.live/chip8_rs/" target="_blank" rel="noopener noreferrer">
+  chip8rs-docs.alessandroferrari.live/chip8_rs
+</a>
+</p>
+
+<p class="blurb">
+- Writeup at 
+<a href="https://alessandroferrari.live/chip8-emulator-written-in-rust/" target="_blank" rel="noopener noreferrer">
+  alessandroferrari.live/chip8-emulator-written-in-rust
+</a>
+</p>
+
+
+    <p class="blurb">
+      Load a ROM, then press <kbd>P</kbd> to run/pause, <kbd>Space</kbd> to step. Keyboard: 1-2-3-4 · Q-W-E-R · A-S-D-F · Z-X-C-V.
+    </p>
+  </section>
+
+  <!-- RIGHT: Controls -->
+  <aside class="card" style="display:flex; flex-direction:column; gap:12px;">
+    <h3 class="title">ROM Loader</h3>
+
+    <div class="row">
+      <input id="rom-url" type="text" placeholder="Paste ROM URL (must allow CORS)" />
+      <button id="load-url">Load</button>
+    </div>
+
+    <div class="row">
+      <select id="rom-preset">
+        <option value="">Choose a preset ROM…</option>
+        <option value="./roms/test_opcode.ch8">test_opcode (local)</option>
+      </select>
+      <button id="load-preset">Load</button>
+    </div>
+
+    <div class="row">
+      <label class="file-btn">Choose file<input id="rom-file" type="file" accept=".ch8,.rom" /></label>
+      <button id="reset">Reset</button>
+    </div>
+
+    <div>
+      <h3 class="title" style="margin-top:8px;">Keypad</h3>
+      <div id="keypad" class="keypad"></div>
+    </div>
+  </aside>
+</main>
+  <script type="module">
+  // ——— one-time bind guard ———
+  if (window.__chip8Bound) throw new Error("chip8 UI already bound");
+  window.__chip8Bound = true;
+
+  const log = (...a) => console.log("%c[WEB]", "color:#0af", ...a);
+  const err = (...a) => console.error("%c[WEB]", "color:#f55", ...a);
+
+  try {
+    const mod = await import("../pkg/chip8_rs.js");
+    const {
+      default: init,
+      init: wasmInit,
+      load_rom,
+      reset,
+      set_key,
+      step,
+      set_running,
+      set_delay_ms,
+    } = mod;
+
+    // aliases
+    const _step       = typeof step === "function" ? step : (n)=>log("[step missing]", n);
+    const _setRunning = typeof set_running === "function" ? set_running : (b)=>log("[set_running missing]", b);
+    const _setDelayMs = typeof set_delay_ms === "function" ? set_delay_ms : (ms)=>log("[set_delay_ms missing]", ms);
+
+    await init();
+    await wasmInit("screen");
+
+    // UI refs
+    const aside  = document.querySelector("aside");
+    const canvas = document.getElementById("screen");
+
+    // ——— status ———
+    let delayMs = 12;   // slower = fewer accidental double actions
+    let loaded  = false;
+    let running = false;
+
+    const status = document.createElement("small");
+    const setLoaded  = (b)=>{ loaded = b;  updateStatus(); };
+    const setRunningUI = (b)=>{ running = b; updateStatus(); };
+    const updateStatus = ()=> status.textContent = `loaded: ${loaded?"✓":"✗"} · running: ${running?"✓":"✗"} · delay=${delayMs}ms`;
+
+    _setDelayMs(delayMs);
+    _setRunning(false);
+    updateStatus();
+
+    // ——— controls ———
+    const mkBtn = (txt, on) => Object.assign(document.createElement("button"), { textContent: txt, onclick: on });
+    const toolbar = Object.assign(document.createElement("div"), { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" });
+
+    // simple debounce for clicks
+    const debounce = (fn, ms=120) => {
+      let t = 0;
+      return (...args)=> {
+        const now = performance.now();
+        if (now - t < ms) return;
+        t = now;
+        fn(...args);
+      };
+    };
+
+    const runBtn   = mkBtn("Run",   debounce(()=>{ _setRunning(true);  setRunningUI(true);  }));
+    const pauseBtn = mkBtn("Pause", debounce(()=>{ _setRunning(false); setRunningUI(false); }));
+    const step1    = mkBtn("Step 1",  debounce(()=> _step(1)));
+    const step10   = mkBtn("Step 10", debounce(()=> _step(10)));
+    const step100  = mkBtn("Step 100",debounce(()=> _step(100)));
+    const slower   = mkBtn("−Speed",  debounce(()=> { delayMs = Math.min(1000, delayMs + 2); _setDelayMs(delayMs); updateStatus(); }));
+    const faster   = mkBtn("+Speed",  debounce(()=> { delayMs = Math.max(1,    delayMs - 2); _setDelayMs(delayMs); updateStatus(); }));
+
+    toolbar.append(runBtn, pauseBtn, step1, step10, step100, slower, faster, status);
+    const controls = Object.assign(document.createElement("div"), { style: "display:flex; flex-direction:column; gap:8px; margin-bottom:8px;" });
+    controls.append(toolbar);
+    aside.prepend(controls);
+
+    // ——— responsive canvas: never cut off, stays crisp ———
+    const fitCanvasToCss = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const w = Math.max(1, Math.round(rect.width  * dpr));
+      const h = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    };
+    new ResizeObserver(fitCanvasToCss).observe(canvas);
+    window.addEventListener("orientationchange", fitCanvasToCss);
+    fitCanvasToCss();
+
+    // ——— helpers: load + pause ———
+    const loadFromUrl = async (url) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = new Uint8Array(await res.arrayBuffer());
+      const r = load_rom(buf);
+      if (r && typeof r.then === "function") await r;
+    };
+    const pauseAndLoadUrl = async (url, label="ROM") => {
+      _setRunning(false); setRunningUI(false);
+      await loadFromUrl(url);
+      setLoaded(true); canvas.focus(); log(`${label} loaded (paused)`);
+    };
+    const pauseAndLoadBytes = async (bytes, label="ROM") => {
+      _setRunning(false); setRunningUI(false);
+      const r = load_rom(bytes);
+      if (r && typeof r.then === "function") await r;
+      setLoaded(true); canvas.focus(); log(`${label} loaded (paused)`);
+    };
+
+    // ——— canvas click = step (debounced) ———
+    canvas.addEventListener("click", debounce((e)=>{
+      const n = e.altKey ? 100 : e.shiftKey ? 10 : 1;
+      _step(n);
+    }, 80));
+
+    // ——— keyboard ———
+    const codeToIdx = Object.fromEntries([
+      ["Digit1",0x1],["Digit2",0x2],["Digit3",0x3],["Digit4",0xC],
+      ["KeyQ",0x4], ["KeyW",0x5], ["KeyE",0x6], ["KeyR",0xD],
+      ["KeyA",0x7], ["KeyS",0x8], ["KeyD",0x9], ["KeyF",0xE],
+      ["KeyZ",0xA], ["KeyX",0x0], ["KeyC",0xB], ["KeyV",0xF],
+    ]);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.repeat) return;                     // <- ignore key repeat (prevents doubles)
+      if (e.code === "Space") { e.preventDefault(); _step(e.shiftKey ? 10 : 1); return; }
+      if (e.code === "KeyP")  { e.preventDefault(); (running ? pauseBtn : runBtn).click(); return; }
+      const idx = codeToIdx[e.code]; if (idx === undefined) return;
+      e.preventDefault(); set_key(idx, true);
+    });
+    window.addEventListener("keyup", (e) => {
+      const idx = codeToIdx[e.code]; if (idx === undefined) return;
+      e.preventDefault(); set_key(idx, false);
+    });
+
+    // ——— on-screen keypad (pointer events only; suppress click) ———
+    const keypadEl = document.getElementById("keypad");
+    if (keypadEl && !keypadEl.dataset.bound) {
+      keypadEl.dataset.bound = "1";
+      const keys = [
+        { label:"1", idx:0x1 }, { label:"2", idx:0x2 }, { label:"3", idx:0x3 }, { label:"4", idx:0xC },
+        { label:"Q", idx:0x4 }, { label:"W", idx:0x5 }, { label:"E", idx:0x6 }, { label:"R", idx:0xD },
+        { label:"A", idx:0x7 }, { label:"S", idx:0x8 }, { label:"D", idx:0x9 }, { label:"F", idx:0xE },
+        { label:"Z", idx:0xA }, { label:"X", idx:0x0 }, { label:"C", idx:0xB }, { label:"V", idx:0xF },
+      ];
+      if (!keypadEl.firstChild) {
+        for (const k of keys) {
+          const div = document.createElement("div");
+          div.className = "key";
+          div.textContent = k.label;
+          // prevent synthesized click from firing anything
+          div.addEventListener("click", e => e.preventDefault());
+          div.addEventListener("pointerdown", (e) => {
+            e.preventDefault(); e.stopPropagation();
+            div.setPointerCapture?.(e.pointerId);
+            div.classList.add("pressed");
+            set_key(k.idx, true);
+          }, { passive: false });
+          div.addEventListener("pointerup", (e) => {
+            e.preventDefault(); e.stopPropagation();
+            div.classList.remove("pressed");
+            set_key(k.idx, false);
+          }, { passive: false });
+          div.addEventListener("pointercancel", (e) => {
+            e.preventDefault(); e.stopPropagation();
+            div.classList.remove("pressed");
+            set_key(k.idx, false);
+          }, { passive: false });
+          div.addEventListener("pointerleave", (e) => {
+            e.preventDefault(); e.stopPropagation();
+            div.classList.remove("pressed");
+            set_key(k.idx, false);
+          }, { passive: false });
+          keypadEl.appendChild(div);
+        }
+      }
+    }
+
+    // ——— auto-load default (paused) ———
+    const params = new URLSearchParams(location.search);
+    const rom = params.get("rom") || "../roms/test_opcode.ch8";
+    try {
+      await pauseAndLoadUrl(new URL(rom, import.meta.url).toString(), "auto ROM");
+    } catch (e) { err("Auto-load failed:", e); }
+
+    // ——— loaders (pause+reset+load) ———
+    document.getElementById("load-url")?.addEventListener("click", debounce(async () => {
+      const url = document.getElementById("rom-url").value.trim();
+      if (!url) return;
+      try { await pauseAndLoadUrl(url, "URL ROM"); }
+      catch (e) { err("Failed to load ROM:", e); alert("Failed to load ROM: " + e); }
+    }));
+
+    document.getElementById("load-preset")?.addEventListener("click", debounce(async () => {
+      const value = document.getElementById("rom-preset").value;
+      if (!value) return;
+      try { await pauseAndLoadUrl(new URL(value, import.meta.url).toString(), "preset ROM"); }
+      catch (e) { err("Failed to load preset ROM:", e); alert("Failed to load preset ROM: " + e); }
+    }));
+
+    document.getElementById("rom-file")?.addEventListener("change", async (e) => {
+      const input = e.target;
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const buf = new Uint8Array(await file.arrayBuffer());
+        await pauseAndLoadBytes(buf, `file ${file.name}`);
+      } catch (e) {
+        err("Failed to load local ROM:", e); alert("Failed to load local ROM: " + e);
+      } finally {
+        input.value = ""; // allow same file again
+      }
+    });
+
+    document.getElementById("reset")?.addEventListener("click", debounce(() => {
+      reset();
+      setLoaded(false); setRunningUI(false);
+    }));
+
+  } catch (e) {
+    err("bootstrap failed:", e);
+  }
+</script>
+
+
+
+</body>
+</html>
+

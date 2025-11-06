@@ -1,0 +1,16 @@
+[build]
+  command = "wasm-pack build --target web --out-dir pkg && rm -rf dist && mkdir dist && cp -r static/* dist && cp -r pkg dist/pkg"
+  publish = "dist"
+
+# (Optional) strong caching for WASM/JS; adjust as you prefer
+[[headers]]
+  for = "/pkg/*.wasm"
+  [headers.values]
+  Content-Type = "application/wasm"
+  Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/pkg/*.js"
+  [headers.values]
+  Cache-Control = "public, max-age=31536000, immutable"
+

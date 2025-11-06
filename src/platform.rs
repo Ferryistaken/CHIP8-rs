@@ -1,3 +1,4 @@
+#![cfg(all(feature = "cli", not(target_arch = "wasm32")))]
 use std::collections::VecDeque;
 
 use crate::chip8::Chip8;
