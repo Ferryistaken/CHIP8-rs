@@ -162,7 +162,7 @@
   const err = (...a) => console.error("%c[WEB]", "color:#f55", ...a);
 
   try {
-    const mod = await import("./pkg/chip8_rs.js");
+    const mod = await import("../pkg/chip8_rs.js");
     const {
       default: init,
       init: wasmInit,
@@ -335,7 +335,7 @@
 
     // ——— auto-load default (paused) ———
     const params = new URLSearchParams(location.search);
-    const rom = params.get("rom") || "./roms/test_opcode.ch8";
+    const rom = params.get("rom") || "../roms/test_opcode.ch8";
     try {
       await pauseAndLoadUrl(new URL(rom, import.meta.url).toString(), "auto ROM");
     } catch (e) { err("Auto-load failed:", e); }

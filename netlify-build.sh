@@ -13,7 +13,7 @@ curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # build the wasm package and assemble dist
-wasm-pack build --target web --out-dir pkg
+wasm-pack build --target web --features web --out-dir pkg
 rm -rf dist
 mkdir dist
 cp -r static/* dist

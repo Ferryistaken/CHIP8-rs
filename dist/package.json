@@ -1,6 +1,0 @@
-{
-  "scripts": {
-    "build": "wasm-pack build --target web --out-dir pkg && rm -rf dist && mkdir dist && cp -r static/* dist && cp -r pkg dist/pkg"
-  }
-}
-
