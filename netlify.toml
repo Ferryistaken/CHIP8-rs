@@ -2,18 +2,22 @@
   command = "chmod +x ./netlify-build.sh && ./netlify-build.sh"
   publish = "dist"
 
+# WASM headers
 [[headers]]
   for = "/pkg/*.wasm"
   [headers.values]
-  Content-Type = "application/wasm"
-  Cache-Control = "public, max-age=31536000, immutable"
-  
-  for = "/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
+    Content-Type = "application/wasm"
+    Cache-Control = "public, max-age=31536000, immutable"
 
+# JS headers
 [[headers]]
   for = "/pkg/*.js"
   [headers.values]
-  Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Global CORS
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
 
