@@ -1,0 +1,1 @@
+/home/ferry/Projects/rust/CHIP8-rs/target/wasm32-unknown-unknown/release/libchip8_rs.rlib: /home/ferry/Projects/rust/CHIP8-rs/src/chip8.rs /home/ferry/Projects/rust/CHIP8-rs/src/lib.rs /home/ferry/Projects/rust/CHIP8-rs/src/platform_web.rs
